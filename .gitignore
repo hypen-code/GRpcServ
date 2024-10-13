@@ -9,6 +9,7 @@ src/main/java/org/hypen/GRpcServ/sample
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.idea/workspace.xml
 *.iws
 *.iml
 *.ipr

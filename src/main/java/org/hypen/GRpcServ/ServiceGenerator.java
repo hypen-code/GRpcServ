@@ -56,6 +56,8 @@ public class ServiceGenerator extends AbstractMojo {
         cu.setPackageDeclaration(defaultPackage);
 
         proto.getMessages().forEach(message -> cu.addImport(defaultPackage+"."+message.getName()));
+        if (proto.getMessages().stream().anyMatch(msg -> msg.getFields().contains("repeated"))) cu.addImport("java.util.List");
+        if (proto.getMessages().stream().anyMatch(msg -> msg.getFields().contains("map"))) cu.addImport("java.util.Map");
         cu.addImport("io.grpc.Status");
         cu.addImport("io.grpc.stub.StreamObserver");
         cu.addImport("org.lognet.springboot.grpc.GRpcService");
@@ -92,16 +94,24 @@ public class ServiceGenerator extends AbstractMojo {
         MethodCallExpr methodCallExpr = new MethodCallExpr(new NameExpr(proto.getServiceName()), endpoint.getName());
         for (Map.Entry<String, String> param : endpoint.getParams().entrySet()) {
             if (param.getKey().equals("genResponse")) continue;
-            methodCallExpr.addArgument(new NameExpr(getGetterName(param.getKey())));
+
+            String collectionModifier = "";
+            if (param.getValue().startsWith("List")) collectionModifier = "List";
+            if (param.getValue().startsWith("Map")) collectionModifier = "Map";
+            methodCallExpr.addArgument(new NameExpr(getGetterName(param.getKey(), collectionModifier)));
         }
         VariableDeclarationExpr variableDeclExpr = new VariableDeclarationExpr(
                 new VariableDeclarator(returnType, "methodResponse", methodCallExpr)
         );
         methodBody.addStatement(variableDeclExpr);
 
+        String responseType = "setResponse";
+        if (endpoint.getParams().containsKey("genResponse") && endpoint.getParams().get("genResponse").startsWith("List")) responseType = "addAllResponse";
+        if (endpoint.getParams().containsKey("genResponse") && endpoint.getParams().get("genResponse").startsWith("Map")) responseType = "putAllResponse";
+
         ClassOrInterfaceType grpcUserType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
-        MethodCallExpr setResponse = new MethodCallExpr(builderCall, "setResponse").addArgument("methodResponse");
+        MethodCallExpr setResponse = new MethodCallExpr(builderCall, responseType).addArgument("methodResponse");
         MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
         VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
                 new VariableDeclarator(grpcUserType, endpoint.getResponse().getName()+"Gen", buildCall)
@@ -128,8 +138,8 @@ public class ServiceGenerator extends AbstractMojo {
         };
     }
 
-    public String getGetterName(String fieldName) {
-        return "request.get" + capitalizeFirstLetter(fieldName) + "()";
+    public String getGetterName(String fieldName, String collectionModifier) {
+        return "request.get" + capitalizeFirstLetter(fieldName) + collectionModifier + "()";
     }
 
     private void genGrpcReflection(ProtoObject proto) {
