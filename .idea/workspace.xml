@@ -88,7 +88,7 @@
     </key>
   </component>
   <component name="RunManager">
-    <configuration name="Unnamed" type="ShConfigurationType" nameIsGenerated="true">
+    <configuration name="Build" type="ShConfigurationType">
       <option name="SCRIPT_TEXT" value="rm -rf ~/.m2/repository/org/HypeN &amp;&amp; mvn clean install" />
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
       <option name="SCRIPT_PATH" value="" />
