@@ -5,12 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="update workspace">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -89,7 +97,7 @@
       <recent name="$PROJECT_DIR$/src/main/resources" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Shell Script.Test">
     <configuration name="Build" type="ShConfigurationType">
       <option name="SCRIPT_TEXT" value="rm -rf ~/.m2/repository/org/HypeN &amp;&amp; mvn clean install" />
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
@@ -105,6 +113,25 @@
       <envs />
       <method v="2" />
     </configuration>
+    <configuration name="Test" type="ShConfigurationType" focusToolWindowBeforeRun="true">
+      <option name="SCRIPT_TEXT" value="mvn clean &amp;&amp; mvn -DsourceDirectories=&quot;src/main/java/org/hypen/GRpcServ/sample&quot; org.HypeN.maven:GRpcServ:proto-gen org.HypeN.maven:GRpcServ:protobuf-gen org.HypeN.maven:GRpcServ:svc-gen" />
+      <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+      <option name="SCRIPT_PATH" value="" />
+      <option name="SCRIPT_OPTIONS" value="" />
+      <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+      <option name="INTERPRETER_PATH" value="/bin/bash" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="EXECUTE_IN_TERMINAL" value="false" />
+      <option name="EXECUTE_SCRIPT_FILE" value="false" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Shell Script.Build" />
+      <item itemvalue="Shell Script.Test" />
+    </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -123,7 +150,7 @@
       <option name="presentableId" value="Default" />
       <updated>1728801577387</updated>
       <workItem from="1728801578646" duration="1126000" />
-      <workItem from="1728818050730" duration="4544000" />
+      <workItem from="1728818050730" duration="6294000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -149,7 +176,15 @@
       <option name="project" value="LOCAL" />
       <updated>1728827780295</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="update workspace">
+      <option name="closed" value="true" />
+      <created>1728829091571</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1728829091571</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
