@@ -4,31 +4,68 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/git_toolbox_blame.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ProtoGenerator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ProtobufGenerator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ServiceGenerator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/annotations/GRpcServ.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models/Endpoint.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models/Message.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models/ProtoObject.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/proto_template.ftl" afterDir="false" />
+    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="collections proto generation">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ServiceGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ServiceGenerator.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "hypen-code"
+  }
+}]]></component>
+  <component name="GitToolBoxStore">
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="develop" />
+                    <option name="lastUsedInstant" value="1728827455" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="master" />
+                    <option name="lastUsedInstant" value="1728827454" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
+  </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/hypen-code/GRpcServ.git",
+    "accountId": "eac46cd3-2506-42b4-9634-ae267ef7dd99"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>
@@ -40,8 +77,12 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Maven.GRpcServ [clean].executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
+    "Shell Script.Build.executor": "Run",
+    "Shell Script.Test.executor": "Run",
+    "Shell Script.Unnamed.executor": "Run",
+    "git-widget-placeholder": "develop",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/harsha/IdeaProjects/GRpcServ/GRpcServ/src/main/java/org/hypen/GRpcServ",
     "node.js.detected.package.eslint": "true",
@@ -58,6 +99,45 @@
       <recent name="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models" />
       <recent name="$PROJECT_DIR$/src/main/resources" />
     </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="org.hypen.GRpcServ.utils" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Shell Script.Build">
+    <configuration name="Build" type="ShConfigurationType">
+      <option name="SCRIPT_TEXT" value="rm -rf ~/.m2/repository/org/HypeN &amp;&amp; mvn clean install" />
+      <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+      <option name="SCRIPT_PATH" value="" />
+      <option name="SCRIPT_OPTIONS" value="" />
+      <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+      <option name="INTERPRETER_PATH" value="/bin/bash" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="EXECUTE_IN_TERMINAL" value="false" />
+      <option name="EXECUTE_SCRIPT_FILE" value="false" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="Test" type="ShConfigurationType" focusToolWindowBeforeRun="true">
+      <option name="SCRIPT_TEXT" value="mvn clean install &amp;&amp; mvn -DsourceDirectories=&quot;src/main/java/org/hypen/GRpcServ/sample&quot; org.HypeN.maven:GRpcServ:proto-gen org.HypeN.maven:GRpcServ:protobuf-gen org.HypeN.maven:GRpcServ:svc-gen" />
+      <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+      <option name="SCRIPT_PATH" value="" />
+      <option name="SCRIPT_OPTIONS" value="" />
+      <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+      <option name="INTERPRETER_PATH" value="/bin/bash" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="EXECUTE_IN_TERMINAL" value="false" />
+      <option name="EXECUTE_SCRIPT_FILE" value="false" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Shell Script.Build" />
+      <item itemvalue="Shell Script.Test" />
+    </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -76,11 +156,77 @@
       <option name="presentableId" value="Default" />
       <updated>1728801577387</updated>
       <workItem from="1728801578646" duration="1126000" />
-      <workItem from="1728818050730" duration="2502000" />
+      <workItem from="1728818050730" duration="15750000" />
     </task>
+    <task id="LOCAL-00001" summary="init">
+      <option name="closed" value="true" />
+      <created>1728827024253</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1728827024253</updated>
+    </task>
+    <task id="LOCAL-00002" summary="update workspace">
+      <option name="closed" value="true" />
+      <created>1728827720102</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1728827720102</updated>
+    </task>
+    <task id="LOCAL-00003" summary="update workspace">
+      <option name="closed" value="true" />
+      <created>1728827780295</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1728827780295</updated>
+    </task>
+    <task id="LOCAL-00004" summary="update workspace">
+      <option name="closed" value="true" />
+      <created>1728829091571</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1728829091571</updated>
+    </task>
+    <task id="LOCAL-00005" summary="update workspace">
+      <option name="closed" value="true" />
+      <created>1728831707093</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1728831707093</updated>
+    </task>
+    <task id="LOCAL-00006" summary="collections proto generation">
+      <option name="closed" value="true" />
+      <created>1728841618110</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1728841618110</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="init" />
+    <MESSAGE value="update workspace" />
+    <MESSAGE value="collections proto generation" />
+    <option name="LAST_COMMIT_MESSAGE" value="collections proto generation" />
   </component>
 </project>

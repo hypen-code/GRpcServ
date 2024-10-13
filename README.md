@@ -31,7 +31,7 @@ This Maven plugin simplifies the migration of REST APIs to gRPC services. It aut
        </executions>
    </plugin>
    ```
-2. **Add the extention to your project's `pom.xml`:**
+2. **Add the extension to your project's `pom.xml`:**
    ```xml
    <extension>
        <groupId>kr.motd.maven</groupId>
@@ -39,7 +39,7 @@ This Maven plugin simplifies the migration of REST APIs to gRPC services. It aut
        <version>1.7.1</version>
    </extension>
    ```
-3. **Add the dependancies to your project's `pom.xml`:**
+3. **Add the dependencies to your project's `pom.xml`:**
    ```xml
    <dependency>
         <groupId>org.HypeN.maven</groupId>

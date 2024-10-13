@@ -22,6 +22,7 @@ import org.apache.maven.shared.utils.StringUtils;
 import org.hypen.GRpcServ.models.Endpoint;
 import org.hypen.GRpcServ.models.Message;
 import org.hypen.GRpcServ.models.ProtoObject;
+import org.hypen.GRpcServ.utils.GrpcDataTranslator;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -38,23 +39,6 @@ public class ProtoGenerator extends AbstractMojo {
 
     @Parameter(property = "sourceDirectories")
     private String sourceDirectories;
-
-    public static String translateToGrpcDataType(String javaDataType) {
-        return switch (javaDataType) {
-            case "int", "Integer" -> "int32";
-            case "long", "Long" -> "int64";
-            case "float", "Float" -> "float";
-            case "double", "Double" -> "double";
-            case "boolean", "Boolean" -> "bool";
-            case "String" -> "string";
-            case "byte[]" -> "bytes";
-            case "List" -> "repeated <element_type>";
-            case "Map" -> "map<key_type, value_type>";
-            case "Date", "Instant" -> "google.protobuf.Timestamp";
-            case "Duration" -> "google.protobuf.Duration";
-            default -> "unknown";
-        };
-    }
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -120,13 +104,15 @@ public class ProtoGenerator extends AbstractMojo {
             Message request = new Message(
                     method.getNameAsString() + "Request",
                     IntStream.range(0, params.size())
-                            .mapToObj(i -> String.format("\t%s %s = %d;", translateToGrpcDataType(params.get(i).getTypeAsString()), params.get(i).getNameAsString(), i + 1))
+                            .mapToObj(i -> String.format("\t%s %s = %d;",
+                                    GrpcDataTranslator.translateToGrpcDataType(params.get(i).getTypeAsString()),
+                                    params.get(i).getNameAsString(), i + 1))
                             .collect(Collectors.joining("\n"))
             );
 
             Message response = new Message(
                     method.getNameAsString() + "Response",
-                    String.format("\t%s %s = 1;", translateToGrpcDataType(method.getTypeAsString()), "response")
+                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(method.getTypeAsString()), "response")
             );
 
             Map<String, String> metaParams = method.getParameters().stream()
