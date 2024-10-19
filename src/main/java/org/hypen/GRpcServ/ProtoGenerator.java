@@ -83,7 +83,11 @@ public class ProtoGenerator extends AbstractMojo {
             for (File file : Objects.requireNonNull(sourceDir.listFiles())) {
                 if (file.isFile() && file.getName().endsWith(".java")) {
                     getLog().info("\tProcessing source file: " + file.getName());
-                    parseMethodsByAnnotation(file.getAbsolutePath());
+                    try {
+                        parseMethodsByAnnotation(file.getAbsolutePath());
+                    } catch (RuntimeException runtimeException){
+                        getLog().warn(runtimeException.getMessage());
+                    }
                 }
             }
         }

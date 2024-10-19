@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="code clean" />
+    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="source scanning">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,8 +15,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Class" />
         <option value="Enum" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -157,7 +159,7 @@
       <updated>1728801577387</updated>
       <workItem from="1728801578646" duration="1126000" />
       <workItem from="1728818050730" duration="15750000" />
-      <workItem from="1729306209850" duration="16713000" />
+      <workItem from="1729306209850" duration="20931000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -239,7 +241,15 @@
       <option name="project" value="LOCAL" />
       <updated>1729326961293</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="source scanning">
+      <option name="closed" value="true" />
+      <created>1729332652003</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1729332652003</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -264,6 +274,18 @@
     <MESSAGE value="enum processing" />
     <MESSAGE value="support same package DTOs" />
     <MESSAGE value="code clean" />
-    <option name="LAST_COMMIT_MESSAGE" value="code clean" />
+    <MESSAGE value="source scanning" />
+    <option name="LAST_COMMIT_MESSAGE" value="source scanning" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/utils/NameMapper.java</url>
+          <line>46</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
