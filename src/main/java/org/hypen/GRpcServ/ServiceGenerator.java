@@ -123,10 +123,15 @@ public class ServiceGenerator extends AbstractMojo {
         methodBody.addStatement(variableDeclExpr);
 
         String responseType = "setResponse";
-        if (endpoint.getParams().containsKey("genResponse") && endpoint.getParams().get("genResponse").startsWith("List"))
-            responseType = "addAllResponse";
-        if (endpoint.getParams().containsKey("genResponse") && endpoint.getParams().get("genResponse").startsWith("Map"))
-            responseType = "putAllResponse";
+        if (endpoint.getParams().containsKey("genResponse")) {
+            if (endpoint.getParams().get("genResponse").startsWith("List") ||
+                    endpoint.getParams().get("genResponse").startsWith("Set") ||
+                    endpoint.getParams().get("genResponse").startsWith("Collection")) {
+                responseType = "addAllResponse";
+            } else if (endpoint.getParams().get("genResponse").startsWith("Map")) {
+                responseType = "putAllResponse";
+            }
+        }
 
         ClassOrInterfaceType grpcUserType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
