@@ -4,10 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="collections proto generation">
+    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="Dto processing">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ProtoGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ProtoGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models/Message.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/utils/GrpcDataTranslator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/utils/GrpcDataTranslator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/proto_template.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/proto_template.ftl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,6 +20,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="Enum" />
       </list>
     </option>
   </component>
@@ -157,7 +160,7 @@
       <updated>1728801577387</updated>
       <workItem from="1728801578646" duration="1126000" />
       <workItem from="1728818050730" duration="15750000" />
-      <workItem from="1729306209850" duration="12532000" />
+      <workItem from="1729306209850" duration="14657000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -207,7 +210,15 @@
       <option name="project" value="LOCAL" />
       <updated>1728841618110</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Dto processing">
+      <option name="closed" value="true" />
+      <created>1729323005414</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1729323005414</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -228,6 +239,7 @@
     <MESSAGE value="init" />
     <MESSAGE value="update workspace" />
     <MESSAGE value="collections proto generation" />
-    <option name="LAST_COMMIT_MESSAGE" value="collections proto generation" />
+    <MESSAGE value="Dto processing" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dto processing" />
   </component>
 </project>

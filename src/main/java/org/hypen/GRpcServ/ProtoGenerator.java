@@ -104,6 +104,7 @@ public class ProtoGenerator extends AbstractMojo {
             getLog().info("\t\tParsing method: " + method.getNameAsString());
             List<com.github.javaparser.ast.body.Parameter> params = method.getParameters();
             Message request = new Message(
+                    Message.Type.GRpcMessage,
                     method.getNameAsString() + "Request",
                     IntStream.range(0, params.size())
                             .mapToObj(i -> String.format("\t%s %s = %d;",
@@ -113,6 +114,7 @@ public class ProtoGenerator extends AbstractMojo {
             );
 
             Message response = new Message(
+                    Message.Type.GRpcMessage,
                     method.getNameAsString() + "Response",
                     String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(mapFQN(method.getTypeAsString(), dtoMap), protoObject.getMessages()), "response")
             );
@@ -181,12 +183,24 @@ public class ProtoGenerator extends AbstractMojo {
         data.put("endpoints", endpoints);
 
         List<Map<String, String>> messages = new ArrayList<>();
-        protoObject.getMessages().forEach(message -> {
+        protoObject.getMessages().stream()
+                .filter(message -> message.getType() == Message.Type.GRpcMessage)
+                .forEach(message -> {
             messages.add(Map.of(
                     "name", message.getName(),
                     "fields", message.getFields()));
         });
         data.put("messages", messages);
+
+        List<Map<String, String>> enums = new ArrayList<>();
+        protoObject.getMessages().stream()
+                .filter(message -> message.getType() == Message.Type.GRpcEnum)
+                .forEach(message -> {
+            enums.add(Map.of(
+                    "name", message.getName(),
+                    "fields", message.getFields()));
+        });
+        data.put("enums", enums);
 
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_31);
         cfg.setClassForTemplateLoading(this.getClass(), "/");

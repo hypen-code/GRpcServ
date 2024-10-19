@@ -17,3 +17,9 @@ message ${message.name} {
 ${message.fields}
 }
 </#list>
+
+<#list enums as enum>
+enum ${enum.name} {
+${enum.fields}
+}
+</#list>

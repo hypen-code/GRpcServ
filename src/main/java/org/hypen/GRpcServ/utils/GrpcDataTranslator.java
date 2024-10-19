@@ -8,6 +8,8 @@ import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.type.Type;
 import org.hypen.GRpcServ.models.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class GrpcDataTranslator {
+
+    private static final Logger log = LoggerFactory.getLogger(GrpcDataTranslator.class);
 
     /**
      * Translates a Java data type to its equivalent gRPC data type.
@@ -82,13 +86,13 @@ public class GrpcDataTranslator {
      */
     public static String translateClass(String javaDataType, Set<Message> msgList) {
         try {
-            System.out.println("FQN: "+javaDataType);
+            log.info("\t\t\tObject FQN: {}", javaDataType);
             CompilationUnit cu = StaticJavaParser.parse(new File(javaDataType));
 
             // Check if it's an enum
             Optional<EnumDeclaration> enumDeclaration = cu.findFirst(EnumDeclaration.class);
             if (enumDeclaration.isPresent()) {
-//                return translateEnumToGrpc(enumDeclaration.get());
+                return translateEnumToGrpc(enumDeclaration.get(), msgList);
             }
 
             // Otherwise, treat it as a class and create a message
@@ -109,22 +113,19 @@ public class GrpcDataTranslator {
      * @param enumDeclaration The JavaParser EnumDeclaration object.
      * @return The gRPC enum definition as a string.
      */
-    private static String translateEnumToGrpc(EnumDeclaration enumDeclaration) {
-        StringBuilder grpcEnum = new StringBuilder("enum ");
-        grpcEnum.append(enumDeclaration.getNameAsString()+"Enum").append(" {\n");
+    private static String translateEnumToGrpc(EnumDeclaration enumDeclaration, Set<Message> msgList) {
+        String fields = IntStream.range(0, enumDeclaration.getEntries().size())
+                .mapToObj(i -> String.format("\t%s = %d;",
+                        enumDeclaration.getEntry(i).asEnumConstantDeclaration().getNameAsString(), i))
+                .collect(Collectors.joining("\n"));
 
-        // Add enum constants
-        for (EnumConstantDeclaration constant : enumDeclaration.getEntries()) {
-            int index = enumDeclaration.getEntries().indexOf(constant);
-            grpcEnum.append("  ")
-                    .append(constant.getNameAsString())
-                    .append(" = ")
-                    .append(index)
-                    .append(";\n");
-        }
-
-        grpcEnum.append("}\n");
-        return grpcEnum.toString();
+        Message msg = new Message(
+                Message.Type.GRpcEnum,
+                enumDeclaration.getNameAsString()+"Enum",
+                fields
+        );
+        msgList.add(msg);
+        return msg.getName();
     }
 
     /**
@@ -141,6 +142,7 @@ public class GrpcDataTranslator {
                 .collect(Collectors.joining("\n"));
 
         Message msg = new Message(
+                Message.Type.GRpcMessage,
                 classDeclaration.getNameAsString()+"Dto",
                 fields
         );

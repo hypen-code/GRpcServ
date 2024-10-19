@@ -12,6 +12,12 @@ import java.io.Serializable;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class Message implements Serializable {
+    Type type;
     String name;
     String fields;
+
+    public static enum Type{
+        GRpcMessage,
+        GRpcEnum
+    }
 }
