@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="Dto processing">
+    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="support same package DTOs">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ProtoGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ProtoGenerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models/Message.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/utils/GrpcDataTranslator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/utils/GrpcDataTranslator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/proto_template.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/proto_template.ftl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,6 +99,9 @@
       <recent name="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/models" />
       <recent name="$PROJECT_DIR$/src/main/resources" />
     </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="org.hypen.GRpcServ.sample" />
+    </key>
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="org.hypen.GRpcServ.utils" />
     </key>
@@ -160,7 +160,7 @@
       <updated>1728801577387</updated>
       <workItem from="1728801578646" duration="1126000" />
       <workItem from="1728818050730" duration="15750000" />
-      <workItem from="1729306209850" duration="14657000" />
+      <workItem from="1729306209850" duration="16378000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -218,7 +218,23 @@
       <option name="project" value="LOCAL" />
       <updated>1729323005414</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="enum processing">
+      <option name="closed" value="true" />
+      <created>1729325135814</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1729325135814</updated>
+    </task>
+    <task id="LOCAL-00009" summary="support same package DTOs">
+      <option name="closed" value="true" />
+      <created>1729326362139</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1729326362139</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -240,6 +256,8 @@
     <MESSAGE value="update workspace" />
     <MESSAGE value="collections proto generation" />
     <MESSAGE value="Dto processing" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dto processing" />
+    <MESSAGE value="enum processing" />
+    <MESSAGE value="support same package DTOs" />
+    <option name="LAST_COMMIT_MESSAGE" value="support same package DTOs" />
   </component>
 </project>

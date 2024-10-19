@@ -23,6 +23,8 @@ import org.hypen.GRpcServ.models.Endpoint;
 import org.hypen.GRpcServ.models.Message;
 import org.hypen.GRpcServ.models.ProtoObject;
 import org.hypen.GRpcServ.utils.GrpcDataTranslator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -32,6 +34,7 @@ import java.util.stream.IntStream;
 
 @Mojo(name = "proto-gen", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class ProtoGenerator extends AbstractMojo {
+    private static final Logger log = LoggerFactory.getLogger(ProtoGenerator.class);
     List<ProtoObject> protoObjects = new ArrayList<>(1);
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -108,7 +111,7 @@ public class ProtoGenerator extends AbstractMojo {
                     method.getNameAsString() + "Request",
                     IntStream.range(0, params.size())
                             .mapToObj(i -> String.format("\t%s %s = %d;",
-                                    GrpcDataTranslator.translateToGrpcDataType(mapFQN(params.get(i).getTypeAsString(),dtoMap), protoObject.getMessages()),
+                                    GrpcDataTranslator.translateToGrpcDataType(mapFQN(params.get(i).getTypeAsString(), dtoMap), protoObject.getMessages()),
                                     params.get(i).getNameAsString(), i + 1))
                             .collect(Collectors.joining("\n"))
             );
@@ -144,10 +147,10 @@ public class ProtoGenerator extends AbstractMojo {
     private String mapFQN(String s, Map<String, String> dtoMap) {
         if (GrpcDataTranslator.JAVA_DATA_TYPES.contains(s)) return s;
         if (dtoMap.containsKey(s)) {
-            return project.getBasedir() + "/src/main/java/" + dtoMap.get(s).replace('.', '/')+".java";
+            return project.getBasedir() + "/src/main/java/" + dtoMap.get(s).replace('.', '/') + ".java";
         } else {
 //            Assume Classes in same package
-            return project.getBasedir() + "/src/main/java/" + dtoMap.get("package").replace('.', '/')+"/"+s+".java";
+            return project.getBasedir() + "/src/main/java/" + dtoMap.get("package").replace('.', '/') + "/" + s + ".java";
         }
     }
 
@@ -158,9 +161,10 @@ public class ProtoGenerator extends AbstractMojo {
             importStr = importStr.replace(";", "").trim();
 
             String[] importArr = importStr.split("\\.");
-            int lastElement = importArr.length-1;
-            if (importArr[lastElement].equals("*")){
+            int lastElement = importArr.length - 1;
+            if (importArr[lastElement].equals("*")) {
 //                TODO Handle * imports
+                log.warn("Current version not supporting * imports");
             } else {
                 dtoMap.put(importArr[lastElement].trim(), importStr);
             }
@@ -190,20 +194,20 @@ public class ProtoGenerator extends AbstractMojo {
         protoObject.getMessages().stream()
                 .filter(message -> message.getType() == Message.Type.GRpcMessage)
                 .forEach(message -> {
-            messages.add(Map.of(
-                    "name", message.getName(),
-                    "fields", message.getFields()));
-        });
+                    messages.add(Map.of(
+                            "name", message.getName(),
+                            "fields", message.getFields()));
+                });
         data.put("messages", messages);
 
         List<Map<String, String>> enums = new ArrayList<>();
         protoObject.getMessages().stream()
                 .filter(message -> message.getType() == Message.Type.GRpcEnum)
                 .forEach(message -> {
-            enums.add(Map.of(
-                    "name", message.getName(),
-                    "fields", message.getFields()));
-        });
+                    enums.add(Map.of(
+                            "name", message.getName(),
+                            "fields", message.getFields()));
+                });
         data.put("enums", enums);
 
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_31);

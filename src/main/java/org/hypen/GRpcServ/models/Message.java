@@ -16,7 +16,7 @@ public class Message implements Serializable {
     String name;
     String fields;
 
-    public static enum Type{
+    public static enum Type {
         GRpcMessage,
         GRpcEnum
     }
