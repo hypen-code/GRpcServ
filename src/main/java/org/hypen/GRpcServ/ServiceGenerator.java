@@ -19,11 +19,16 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.hypen.GRpcServ.models.Endpoint;
 import org.hypen.GRpcServ.models.ProtoObject;
+import org.hypen.GRpcServ.utils.NameMapper;
 import org.springframework.util.CollectionUtils;
 
+import javax.naming.NameParser;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
 
@@ -44,7 +49,7 @@ public class ServiceGenerator extends AbstractMojo {
             return;
         }
 
-        if (!CollectionUtils.isEmpty(protoObjects))genGrpcReflection(protoObjects.get(0));
+        if (!CollectionUtils.isEmpty(protoObjects)) genGrpcReflection(protoObjects.get(0));
 
         protoObjects.forEach(this::genGrpcService);
     }
@@ -52,40 +57,59 @@ public class ServiceGenerator extends AbstractMojo {
     private void genGrpcService(ProtoObject proto) {
         getLog().info("GRpcServ generating service: " + proto.getServiceName());
         CompilationUnit cu = new CompilationUnit();
-        String defaultPackage = proto.getPackageName()+"."+proto.getServiceName()+"Gen";
+        String defaultPackage = proto.getPackageName() + "." + proto.getServiceName() + "Gen";
         cu.setPackageDeclaration(defaultPackage);
 
-        proto.getMessages().forEach(message -> cu.addImport(defaultPackage+"."+message.getName()));
-        if (proto.getMessages().stream().anyMatch(msg -> msg.getFields().contains("repeated"))) cu.addImport("java.util.List");
-        if (proto.getMessages().stream().anyMatch(msg -> msg.getFields().contains("map"))) cu.addImport("java.util.Map");
+        generateImports(proto, cu, defaultPackage);
+
+        ClassOrInterfaceDeclaration classDeclaration = cu.addClass(proto.getServiceName() + "Gen").setModifiers(Modifier.Keyword.PUBLIC);
+        classDeclaration.addAnnotation(new MarkerAnnotationExpr("GRpcService"));
+        ClassOrInterfaceType superclass = StaticJavaParser.parseClassOrInterfaceType(proto.getServiceName() + "Grpc." + proto.getServiceName() + "ImplBase");
+        cu.addImport(defaultPackage + "." + proto.getServiceName() + "Grpc");
+        classDeclaration.setExtendedTypes(NodeList.nodeList(superclass));
+
+        FieldDeclaration field = classDeclaration.addField(StaticJavaParser.parseType(proto.getServiceName()), proto.getServiceName());
+        field.addAnnotation(new MarkerAnnotationExpr("Autowired"));
+        cu.addImport(proto.getPackageName() + "." + proto.getServiceName());
+
+        proto.getEndpoints().forEach(endpoint -> {
+            try {
+                generateMethods(classDeclaration, endpoint, proto);
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        storeClassFile(cu, proto.getServiceName() + "Gen.java");
+    }
+
+    private void generateImports(ProtoObject proto, CompilationUnit cu, String defaultPackage) {
+        proto.getMessages().forEach(message -> cu.addImport(defaultPackage + "." + message.getName()));
         cu.addImport("io.grpc.Status");
         cu.addImport("io.grpc.stub.StreamObserver");
         cu.addImport("org.lognet.springboot.grpc.GRpcService");
         cu.addImport("org.springframework.beans.factory.annotation.Autowired");
 
-        ClassOrInterfaceDeclaration classDeclaration = cu.addClass(proto.getServiceName()+"Gen").setModifiers(Modifier.Keyword.PUBLIC);
-        classDeclaration.addAnnotation(new MarkerAnnotationExpr("GRpcService"));
-        ClassOrInterfaceType superclass = StaticJavaParser.parseClassOrInterfaceType(proto.getServiceName() +"Grpc."+proto.getServiceName()+"ImplBase");
-        cu.addImport(defaultPackage+"."+proto.getServiceName()+"Grpc");
-        classDeclaration.setExtendedTypes(NodeList.nodeList(superclass));
+        List<String> paramDTs = new ArrayList<>();
+        proto.getEndpoints().forEach(e->paramDTs.addAll(e.getParams().values().stream().toList()));
+        if (NameMapper.anyStartWithStr("List", paramDTs)) cu.addImport("java.util.List");
+        if (NameMapper.anyStartWithStr("Map", paramDTs)) cu.addImport("java.util.Map");
+        if (NameMapper.anyStartWithStr("Set", paramDTs)) cu.addImport("java.util.Set");
+        if (NameMapper.anyStartWithStr("Collection", paramDTs)) cu.addImport("java.util.Collection");
 
-        FieldDeclaration field = classDeclaration.addField(StaticJavaParser.parseType(proto.getServiceName()), proto.getServiceName());
-        field.addAnnotation(new MarkerAnnotationExpr("Autowired"));
-        cu.addImport(proto.getPackageName()+"."+proto.getServiceName());
-
-        proto.getEndpoints().forEach(endpoint ->generateMethods(classDeclaration, endpoint, proto));
-
-        storeClassFile(cu, proto.getServiceName() + "Gen.java");
+        proto.getDtoMap().keySet().forEach(key -> {
+            if (NameMapper.anyStartWithStr(key, paramDTs)) cu.addImport(proto.getDtoMap().get(key));
+        });
     }
 
-    private void generateMethods(ClassOrInterfaceDeclaration classDeclaration, Endpoint endpoint, ProtoObject proto) {
+    private void generateMethods(ClassOrInterfaceDeclaration classDeclaration, Endpoint endpoint, ProtoObject proto) throws FileNotFoundException {
         getLog().info("Generating method: " + endpoint.getName());
         MethodDeclaration method = classDeclaration.addMethod(endpoint.getName(), Modifier.Keyword.PUBLIC);
         method.addAnnotation(new MarkerAnnotationExpr("Override"));
 
         NodeList<com.github.javaparser.ast.body.Parameter> params = new NodeList<>(
                 new com.github.javaparser.ast.body.Parameter(StaticJavaParser.parseType(endpoint.getRequest().getName()), "request"),
-                new com.github.javaparser.ast.body.Parameter(StaticJavaParser.parseType("StreamObserver<"+endpoint.getResponse().getName()+">"), "responseObserver"));
+                new com.github.javaparser.ast.body.Parameter(StaticJavaParser.parseType("StreamObserver<" + endpoint.getResponse().getName() + ">"), "responseObserver"));
         method.setParameters(params);
 
         BlockStmt methodBody = new BlockStmt();
@@ -106,19 +130,51 @@ public class ServiceGenerator extends AbstractMojo {
         methodBody.addStatement(variableDeclExpr);
 
         String responseType = "setResponse";
-        if (endpoint.getParams().containsKey("genResponse") && endpoint.getParams().get("genResponse").startsWith("List")) responseType = "addAllResponse";
-        if (endpoint.getParams().containsKey("genResponse") && endpoint.getParams().get("genResponse").startsWith("Map")) responseType = "putAllResponse";
+        if (endpoint.getParams().containsKey("genResponse")) {
+            if (endpoint.getParams().get("genResponse").startsWith("List") ||
+                    endpoint.getParams().get("genResponse").startsWith("Set") ||
+                    endpoint.getParams().get("genResponse").startsWith("Collection")) {
+                responseType = "addAllResponse";
+            } else if (endpoint.getParams().get("genResponse").startsWith("Map")) {
+                responseType = "putAllResponse";
+            }
+        }
 
-        ClassOrInterfaceType grpcUserType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
+        String responseValue = "methodResponse";
+        if (proto.getDtoMap().containsKey(endpoint.getParams().get("genResponse"))){
+            NameMapper nm = NameMapper.getInstance(project, proto.getDtoMap());
+            CompilationUnit cu = StaticJavaParser.parse(new File(nm.mapFQN(endpoint.getParams().get("genResponse"))));
+            Optional<ClassOrInterfaceDeclaration> dtoClassDecl = cu.findFirst(ClassOrInterfaceDeclaration.class);
+            if (dtoClassDecl.isEmpty()) throw new RuntimeException("DTO class not found: " + endpoint.getParams().get("genResponse"));
+
+            ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getParams().get("genResponse")+"Dto");
+            MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(grpcType.getName()), "newBuilder");
+
+            MethodCallExpr setResponse = builderCall;
+            for (FieldDeclaration field : dtoClassDecl.get().getFields()) {
+                String name = field.getVariables().get(0).getNameAsString();
+                setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
+                        .addArgument("methodResponse."+ NameMapper.getterName(name, "()"));
+            }
+
+            MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
+            VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
+                    new VariableDeclarator(grpcType, "dtoResponseGen", buildCall)
+            );
+            methodBody.addStatement(grpcVariableDeclExpr);
+            responseValue = "dtoResponseGen";
+        }
+
+        ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
-        MethodCallExpr setResponse = new MethodCallExpr(builderCall, responseType).addArgument("methodResponse");
+        MethodCallExpr setResponse = new MethodCallExpr(builderCall, responseType).addArgument(responseValue);
         MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
         VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
-                new VariableDeclarator(grpcUserType, endpoint.getResponse().getName()+"Gen", buildCall)
+                new VariableDeclarator(grpcType, endpoint.getResponse().getName() + "Gen", buildCall)
         );
         methodBody.addStatement(grpcVariableDeclExpr);
 
-        MethodCallExpr onNextCall = new MethodCallExpr(new NameExpr("responseObserver"), "onNext").addArgument(new NameExpr(endpoint.getResponse().getName()+"Gen"));
+        MethodCallExpr onNextCall = new MethodCallExpr(new NameExpr("responseObserver"), "onNext").addArgument(new NameExpr(endpoint.getResponse().getName() + "Gen"));
         methodBody.addStatement(onNextCall);
 
         MethodCallExpr onCompletedCall = new MethodCallExpr(new NameExpr("responseObserver"), "onCompleted");

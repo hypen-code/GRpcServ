@@ -1,13 +1,17 @@
 ## GRpcServ: REST to gRPC Migration Plugin
 
-This Maven plugin simplifies the migration of REST APIs to gRPC services. It automatically generates gRPC service definitions (proto files) and corresponding services Java code based on your existing REST controllers.
+This Maven plugin simplifies the migration of REST APIs to gRPC services. It automatically generates gRPC service
+definitions (proto files) and corresponding services Java code based on your existing REST controllers.
 
 ### Features
 
-* **Automatic Proto File Generation:**  Generates proto files from your REST controllers, defining gRPC services and messages.
-* **gRPC Service Implementation:** Creates Java code for gRPC service implementations, handling request/response mapping and error handling.
+* **Automatic Proto File Generation:**  Generates proto files from your REST controllers, defining gRPC services and
+  messages.
+* **gRPC Service Implementation:** Creates Java code for gRPC service implementations, handling request/response mapping
+  and error handling.
 * **Reflection Service:** Includes a reflection service for easy introspection of your gRPC services.
-* **Maven Integration:** Seamlessly integrates with Maven's build lifecycle, making it easy to incorporate into your project.
+* **Maven Integration:** Seamlessly integrates with Maven's build lifecycle, making it easy to incorporate into your
+  project.
 
 ### Installation
 
@@ -52,12 +56,15 @@ This Maven plugin simplifies the migration of REST APIs to gRPC services. It aut
         <version>1.3.2</version>
     </dependency>
    ```
-2. **Configure the `sourceDirectories` parameter:** This parameter specifies the directory containing your REST controller Java files.
+2. **Configure the `sourceDirectories` parameter:** This parameter specifies the directory containing your REST
+   controller Java files.
 
 ### Usage
 
-1. **Build your project:** The plugin will automatically execute during the `generate-sources` phase of your Maven build.
-2. **Generated Files:** The plugin will generate the following files in the `target/generated-sources/proto` and `target/generated-sources/protosvc` directories:
+1. **Build your project:** The plugin will automatically execute during the `generate-sources` phase of your Maven
+   build.
+2. **Generated Files:** The plugin will generate the following files in the `target/generated-sources/proto` and
+   `target/generated-sources/protosvc` directories:
     * **Proto files:**  `.proto` files defining your gRPC services and messages.
     * **gRPC Service Implementations:** Java code for your gRPC service implementations.
     * **Reflection Service:** Java code for the reflection service.

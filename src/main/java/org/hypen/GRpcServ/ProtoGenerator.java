@@ -23,6 +23,9 @@ import org.hypen.GRpcServ.models.Endpoint;
 import org.hypen.GRpcServ.models.Message;
 import org.hypen.GRpcServ.models.ProtoObject;
 import org.hypen.GRpcServ.utils.GrpcDataTranslator;
+import org.hypen.GRpcServ.utils.NameMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -32,6 +35,7 @@ import java.util.stream.IntStream;
 
 @Mojo(name = "proto-gen", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class ProtoGenerator extends AbstractMojo {
+    private static final Logger log = LoggerFactory.getLogger(ProtoGenerator.class);
     List<ProtoObject> protoObjects = new ArrayList<>(1);
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -79,7 +83,11 @@ public class ProtoGenerator extends AbstractMojo {
             for (File file : Objects.requireNonNull(sourceDir.listFiles())) {
                 if (file.isFile() && file.getName().endsWith(".java")) {
                     getLog().info("\tProcessing source file: " + file.getName());
-                    parseMethodsByAnnotation(file.getAbsolutePath());
+                    try {
+                        parseMethodsByAnnotation(file.getAbsolutePath());
+                    } catch (RuntimeException runtimeException){
+                        getLog().warn(runtimeException.getMessage());
+                    }
                 }
             }
         }
@@ -98,21 +106,28 @@ public class ProtoGenerator extends AbstractMojo {
         List<MethodDeclaration> methods = cu.findAll(MethodDeclaration.class,
                 m -> m.getAnnotationByName("GRpcServ").isPresent());
 
+        Map<String, String> dtoMap = generateImportMap(cu);
+        dtoMap.put("package", cu.getPackageDeclaration().orElseThrow().getNameAsString());
+        protoObject.setDtoMap(dtoMap);
+        NameMapper nm = NameMapper.getInstance(project, dtoMap);
+
         for (MethodDeclaration method : methods) {
             getLog().info("\t\tParsing method: " + method.getNameAsString());
             List<com.github.javaparser.ast.body.Parameter> params = method.getParameters();
             Message request = new Message(
+                    Message.Type.GRpcMessage,
                     method.getNameAsString() + "Request",
                     IntStream.range(0, params.size())
                             .mapToObj(i -> String.format("\t%s %s = %d;",
-                                    GrpcDataTranslator.translateToGrpcDataType(params.get(i).getTypeAsString()),
+                                    GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(params.get(i).getTypeAsString()), protoObject),
                                     params.get(i).getNameAsString(), i + 1))
                             .collect(Collectors.joining("\n"))
             );
 
             Message response = new Message(
+                    Message.Type.GRpcMessage,
                     method.getNameAsString() + "Response",
-                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(method.getTypeAsString()), "response")
+                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(method.getTypeAsString()), protoObject), "response")
             );
 
             Map<String, String> metaParams = method.getParameters().stream()
@@ -137,6 +152,24 @@ public class ProtoGenerator extends AbstractMojo {
         }
     }
 
+    public static Map<String, String> generateImportMap(CompilationUnit cu) {
+        Map<String, String> dtoMap = new HashMap<>();
+        cu.getImports().forEach(importDecl -> {
+            String importStr = importDecl.toString().replace("import ", "");
+            importStr = importStr.replace(";", "").trim();
+
+            String[] importArr = importStr.split("\\.");
+            int lastElement = importArr.length - 1;
+            if (importArr[lastElement].equals("*")) {
+//                TODO Handle * imports
+                log.warn("Current version not supporting * imports");
+            } else {
+                dtoMap.put(importArr[lastElement].trim(), importStr);
+            }
+        });
+        return dtoMap;
+    }
+
     private void generateProtoFiles(@NotNull ProtoObject protoObject, @NotNull String outputDirectory)
             throws IOException, TemplateException {
         getLog().info("\tGenerating service proto file: " + protoObject.getServiceName());
@@ -144,6 +177,8 @@ public class ProtoGenerator extends AbstractMojo {
         data.put("packageName", protoObject.getPackageName());
         data.put("serviceName", protoObject.getServiceName());
         data.put("javaMultipleFiles", protoObject.getJavaMultipleFiles());
+
+        data.put("imports", protoObject.getImports());
 
         List<Map<String, String>> endpoints = new ArrayList<>();
         protoObject.getEndpoints().forEach(endpoint -> {
@@ -155,12 +190,24 @@ public class ProtoGenerator extends AbstractMojo {
         data.put("endpoints", endpoints);
 
         List<Map<String, String>> messages = new ArrayList<>();
-        protoObject.getMessages().forEach(message -> {
-            messages.add(Map.of(
-                    "name", message.getName(),
-                    "fields", message.getFields()));
-        });
+        protoObject.getMessages().stream()
+                .filter(message -> message.getType() == Message.Type.GRpcMessage)
+                .forEach(message -> {
+                    messages.add(Map.of(
+                            "name", message.getName(),
+                            "fields", message.getFields()));
+                });
         data.put("messages", messages);
+
+        List<Map<String, String>> enums = new ArrayList<>();
+        protoObject.getMessages().stream()
+                .filter(message -> message.getType() == Message.Type.GRpcEnum)
+                .forEach(message -> {
+                    enums.add(Map.of(
+                            "name", message.getName(),
+                            "fields", message.getFields()));
+                });
+        data.put("enums", enums);
 
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_31);
         cfg.setClassForTemplateLoading(this.getClass(), "/");
