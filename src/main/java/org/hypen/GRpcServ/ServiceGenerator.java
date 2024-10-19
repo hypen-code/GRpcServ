@@ -59,18 +59,7 @@ public class ServiceGenerator extends AbstractMojo {
         String defaultPackage = proto.getPackageName() + "." + proto.getServiceName() + "Gen";
         cu.setPackageDeclaration(defaultPackage);
 
-        proto.getMessages().forEach(message -> cu.addImport(defaultPackage + "." + message.getName()));
-        cu.addImport("io.grpc.Status");
-        cu.addImport("io.grpc.stub.StreamObserver");
-        cu.addImport("org.lognet.springboot.grpc.GRpcService");
-        cu.addImport("org.springframework.beans.factory.annotation.Autowired");
-
-        List<String> paramDTs = new ArrayList<>();
-        proto.getEndpoints().forEach(e->paramDTs.addAll(e.getParams().values().stream().toList()));
-        if (NameMapper.anyStartWithStr("List", paramDTs)) cu.addImport("java.util.List");
-        if (NameMapper.anyStartWithStr("Map", paramDTs)) cu.addImport("java.util.Map");
-        if (NameMapper.anyStartWithStr("Set", paramDTs)) cu.addImport("java.util.Set");
-        if (NameMapper.anyStartWithStr("Collection", paramDTs)) cu.addImport("java.util.Collection");
+        generateImports(proto, cu, defaultPackage);
 
         ClassOrInterfaceDeclaration classDeclaration = cu.addClass(proto.getServiceName() + "Gen").setModifiers(Modifier.Keyword.PUBLIC);
         classDeclaration.addAnnotation(new MarkerAnnotationExpr("GRpcService"));
@@ -85,6 +74,21 @@ public class ServiceGenerator extends AbstractMojo {
         proto.getEndpoints().forEach(endpoint -> generateMethods(classDeclaration, endpoint, proto));
 
         storeClassFile(cu, proto.getServiceName() + "Gen.java");
+    }
+
+    private void generateImports(ProtoObject proto, CompilationUnit cu, String defaultPackage) {
+        proto.getMessages().forEach(message -> cu.addImport(defaultPackage + "." + message.getName()));
+        cu.addImport("io.grpc.Status");
+        cu.addImport("io.grpc.stub.StreamObserver");
+        cu.addImport("org.lognet.springboot.grpc.GRpcService");
+        cu.addImport("org.springframework.beans.factory.annotation.Autowired");
+
+        List<String> paramDTs = new ArrayList<>();
+        proto.getEndpoints().forEach(e->paramDTs.addAll(e.getParams().values().stream().toList()));
+        if (NameMapper.anyStartWithStr("List", paramDTs)) cu.addImport("java.util.List");
+        if (NameMapper.anyStartWithStr("Map", paramDTs)) cu.addImport("java.util.Map");
+        if (NameMapper.anyStartWithStr("Set", paramDTs)) cu.addImport("java.util.Set");
+        if (NameMapper.anyStartWithStr("Collection", paramDTs)) cu.addImport("java.util.Collection");
     }
 
     private void generateMethods(ClassOrInterfaceDeclaration classDeclaration, Endpoint endpoint, ProtoObject proto) {
