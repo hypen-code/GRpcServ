@@ -38,6 +38,7 @@ public class GrpcDataTranslator {
      */
     public static String translateToGrpcDataType(String javaDataType, Set<Message> msgList) {
         // Pattern to extract inner types from generics
+        NameMapper nm = NameMapper.getInstance();
         Pattern genericPattern = Pattern.compile("<(.*?)>");
         long closeCount = javaDataType.chars().filter(c -> c == '>').count();
 
@@ -46,7 +47,7 @@ public class GrpcDataTranslator {
             System.out.println("List: " + javaDataType);
             Matcher matcher = genericPattern.matcher(javaDataType);
             if (matcher.find()) {
-                String elementType = translateToGrpcDataType(matcher.group(1) + String.valueOf('>').repeat((int) (closeCount - 1)), msgList);
+                String elementType = translateToGrpcDataType(nm.mapFQN(matcher.group(1) + String.valueOf('>').repeat((int) (closeCount - 1))), msgList);
                 return "repeated " + elementType;
             } else {
                 return "repeated <unknown>";
@@ -58,8 +59,8 @@ public class GrpcDataTranslator {
             if (matcher.find()) {
                 String[] types = matcher.group(1).split(",");
                 if (types.length == 2) {
-                    String keyType = translateToGrpcDataType(types[0].trim(), msgList);
-                    String valueType = translateToGrpcDataType(types[1].trim() + String.valueOf('>').repeat((int) (closeCount - 1)), msgList);
+                    String keyType = translateToGrpcDataType(nm.mapFQN(types[0].trim()), msgList);
+                    String valueType = translateToGrpcDataType(nm.mapFQN(types[1].trim() + String.valueOf('>').repeat((int) (closeCount - 1))), msgList);
                     return "map<" + keyType + ", " + valueType + ">";
                 } else {
                     return "map<unknown, unknown>";
@@ -141,9 +142,10 @@ public class GrpcDataTranslator {
      * @return The gRPC message definition as a string.
      */
     private static String translateClassToGrpcMessage(ClassOrInterfaceDeclaration classDeclaration, Set<Message> msgList) {
+        NameMapper nm = NameMapper.getInstance();
         String fields = IntStream.range(0, classDeclaration.getFields().size())
                 .mapToObj(i -> String.format("\t%s %s = %d;",
-                        GrpcDataTranslator.translateToGrpcDataType(classDeclaration.getFields().get(i).getVariable(0).getType().toString(), msgList),
+                        GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(classDeclaration.getFields().get(i).getVariable(0).getType().toString()), msgList),
                         classDeclaration.getFields().get(i).getVariable(0).getNameAsString(), i + 1))
                 .collect(Collectors.joining("\n"));
 

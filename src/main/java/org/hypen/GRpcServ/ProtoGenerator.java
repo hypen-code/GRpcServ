@@ -23,6 +23,7 @@ import org.hypen.GRpcServ.models.Endpoint;
 import org.hypen.GRpcServ.models.Message;
 import org.hypen.GRpcServ.models.ProtoObject;
 import org.hypen.GRpcServ.utils.GrpcDataTranslator;
+import org.hypen.GRpcServ.utils.NameMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,6 +103,7 @@ public class ProtoGenerator extends AbstractMojo {
                 m -> m.getAnnotationByName("GRpcServ").isPresent());
 
         Map<String, String> dtoMap = generateImportMap(cu);
+        NameMapper nm = NameMapper.getInstance(project, dtoMap);
 
         for (MethodDeclaration method : methods) {
             getLog().info("\t\tParsing method: " + method.getNameAsString());
@@ -111,7 +113,7 @@ public class ProtoGenerator extends AbstractMojo {
                     method.getNameAsString() + "Request",
                     IntStream.range(0, params.size())
                             .mapToObj(i -> String.format("\t%s %s = %d;",
-                                    GrpcDataTranslator.translateToGrpcDataType(mapFQN(params.get(i).getTypeAsString(), dtoMap), protoObject.getMessages()),
+                                    GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(params.get(i).getTypeAsString()), protoObject.getMessages()),
                                     params.get(i).getNameAsString(), i + 1))
                             .collect(Collectors.joining("\n"))
             );
@@ -119,7 +121,7 @@ public class ProtoGenerator extends AbstractMojo {
             Message response = new Message(
                     Message.Type.GRpcMessage,
                     method.getNameAsString() + "Response",
-                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(mapFQN(method.getTypeAsString(), dtoMap), protoObject.getMessages()), "response")
+                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(method.getTypeAsString()), protoObject.getMessages()), "response")
             );
 
             Map<String, String> metaParams = method.getParameters().stream()
@@ -143,16 +145,16 @@ public class ProtoGenerator extends AbstractMojo {
             protoObjects.add(protoObject);
         }
     }
-
-    private String mapFQN(String s, Map<String, String> dtoMap) {
-        if (GrpcDataTranslator.JAVA_DATA_TYPES.contains(s)) return s;
-        if (dtoMap.containsKey(s)) {
-            return project.getBasedir() + "/src/main/java/" + dtoMap.get(s).replace('.', '/') + ".java";
-        } else {
-//            Assume Classes in same package
-            return project.getBasedir() + "/src/main/java/" + dtoMap.get("package").replace('.', '/') + "/" + s + ".java";
-        }
-    }
+//
+//    private String mapFQN(String s, Map<String, String> dtoMap) {
+//        if (GrpcDataTranslator.JAVA_DATA_TYPES.contains(s)) return s;
+//        if (dtoMap.containsKey(s)) {
+//            return project.getBasedir() + "/src/main/java/" + dtoMap.get(s).replace('.', '/') + ".java";
+//        } else {
+////            Assume Classes in same package
+//            return project.getBasedir() + "/src/main/java/" + dtoMap.get("package").replace('.', '/') + "/" + s + ".java";
+//        }
+//    }
 
     private Map<String, String> generateImportMap(CompilationUnit cu) {
         Map<String, String> dtoMap = new HashMap<>();

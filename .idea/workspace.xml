@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="support same package DTOs">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ProtoGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ProtoGenerator.java" afterDir="false" />
-    </list>
+    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="code clean" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -160,7 +157,7 @@
       <updated>1728801577387</updated>
       <workItem from="1728801578646" duration="1126000" />
       <workItem from="1728818050730" duration="15750000" />
-      <workItem from="1729306209850" duration="16378000" />
+      <workItem from="1729306209850" duration="16713000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -234,7 +231,15 @@
       <option name="project" value="LOCAL" />
       <updated>1729326362139</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="code clean">
+      <option name="closed" value="true" />
+      <created>1729326961293</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1729326961293</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -258,6 +263,7 @@
     <MESSAGE value="Dto processing" />
     <MESSAGE value="enum processing" />
     <MESSAGE value="support same package DTOs" />
-    <option name="LAST_COMMIT_MESSAGE" value="support same package DTOs" />
+    <MESSAGE value="code clean" />
+    <option name="LAST_COMMIT_MESSAGE" value="code clean" />
   </component>
 </project>
