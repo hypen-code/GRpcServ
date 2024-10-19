@@ -6,6 +6,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.hypen.GRpcServ.ProtoGenerator;
 import org.hypen.GRpcServ.models.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class GrpcDataTranslator {
     MavenProject project;
 
     public static List<String> JAVA_DATA_TYPES = Arrays.asList("int", "Integer", "long", "Long", "float", "Float", "double", "Double", "boolean", "Boolean", "String", "byte[]", "Date", "Instant", "Duration");
+    public static List<String> JAVA_DATA_COLLECTIONS = Arrays.asList("List", "Map", "Set", "Collection", "Iterable");
 
     /**
      * Translates a Java data type to its equivalent gRPC data type.
@@ -42,9 +44,8 @@ public class GrpcDataTranslator {
         Pattern genericPattern = Pattern.compile("<(.*?)>");
         long closeCount = javaDataType.chars().filter(c -> c == '>').count();
 
-        if (javaDataType.startsWith("List")) {
+        if (javaDataType.startsWith("List") || javaDataType.startsWith("Set") || javaDataType.startsWith("Collection") || javaDataType.startsWith("Iterable")) {
             // Handle List types
-            System.out.println("List: " + javaDataType);
             Matcher matcher = genericPattern.matcher(javaDataType);
             if (matcher.find()) {
                 String elementType = translateToGrpcDataType(nm.mapFQN(matcher.group(1) + String.valueOf('>').repeat((int) (closeCount - 1))), msgList);
@@ -54,7 +55,6 @@ public class GrpcDataTranslator {
             }
         } else if (javaDataType.startsWith("Map")) {
             // Handle Map types
-            System.out.println("Map: " + javaDataType);
             Matcher matcher = genericPattern.matcher(javaDataType);
             if (matcher.find()) {
                 String[] types = matcher.group(1).split(",");
@@ -95,6 +95,7 @@ public class GrpcDataTranslator {
         try {
             log.info("\t\t\tObject FQN: {}", javaDataType);
             CompilationUnit cu = StaticJavaParser.parse(new File(javaDataType));
+            NameMapper.getInstance().getDtoMap().putAll(ProtoGenerator.generateImportMap(cu));
 
             // Check if it's an enum
             Optional<EnumDeclaration> enumDeclaration = cu.findFirst(EnumDeclaration.class);

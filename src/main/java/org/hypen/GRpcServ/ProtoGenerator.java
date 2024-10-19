@@ -107,6 +107,7 @@ public class ProtoGenerator extends AbstractMojo {
                 m -> m.getAnnotationByName("GRpcServ").isPresent());
 
         Map<String, String> dtoMap = generateImportMap(cu);
+        dtoMap.put("package", cu.getPackageDeclaration().orElseThrow().getNameAsString());
         NameMapper nm = NameMapper.getInstance(project, dtoMap);
 
         for (MethodDeclaration method : methods) {
@@ -160,7 +161,7 @@ public class ProtoGenerator extends AbstractMojo {
 //        }
 //    }
 
-    private Map<String, String> generateImportMap(CompilationUnit cu) {
+    public static Map<String, String> generateImportMap(CompilationUnit cu) {
         Map<String, String> dtoMap = new HashMap<>();
         cu.getImports().forEach(importDecl -> {
             String importStr = importDecl.toString().replace("import ", "");
@@ -175,7 +176,6 @@ public class ProtoGenerator extends AbstractMojo {
                 dtoMap.put(importArr[lastElement].trim(), importStr);
             }
         });
-        dtoMap.put("package", cu.getPackageDeclaration().orElseThrow().getNameAsString());
         return dtoMap;
     }
 
