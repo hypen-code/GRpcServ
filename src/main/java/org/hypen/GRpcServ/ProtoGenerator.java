@@ -142,10 +142,13 @@ public class ProtoGenerator extends AbstractMojo {
     }
 
     private String mapFQN(String s, Map<String, String> dtoMap) {
+        if (GrpcDataTranslator.JAVA_DATA_TYPES.contains(s)) return s;
         if (dtoMap.containsKey(s)) {
             return project.getBasedir() + "/src/main/java/" + dtoMap.get(s).replace('.', '/')+".java";
+        } else {
+//            Assume Classes in same package
+            return project.getBasedir() + "/src/main/java/" + dtoMap.get("package").replace('.', '/')+"/"+s+".java";
         }
-        return s;
     }
 
     private Map<String, String> generateImportMap(CompilationUnit cu) {
@@ -162,6 +165,7 @@ public class ProtoGenerator extends AbstractMojo {
                 dtoMap.put(importArr[lastElement].trim(), importStr);
             }
         });
+        dtoMap.put("package", cu.getPackageDeclaration().orElseThrow().getNameAsString());
         return dtoMap;
     }
 

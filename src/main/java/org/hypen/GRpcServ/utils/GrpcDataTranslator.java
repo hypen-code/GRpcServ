@@ -3,16 +3,17 @@ package org.hypen.GRpcServ.utils;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.EnumConstantDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.type.Type;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.hypen.GRpcServ.models.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -23,6 +24,11 @@ import java.util.stream.IntStream;
 public class GrpcDataTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(GrpcDataTranslator.class);
+
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
+    MavenProject project;
+
+    public static List<String> JAVA_DATA_TYPES = Arrays.asList("int", "Integer", "long", "Long", "float", "Float", "double", "Double", "boolean", "Boolean", "String", "byte[]", "Date", "Instant", "Duration");
 
     /**
      * Translates a Java data type to its equivalent gRPC data type.
