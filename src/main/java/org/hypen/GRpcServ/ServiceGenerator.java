@@ -89,6 +89,10 @@ public class ServiceGenerator extends AbstractMojo {
         if (NameMapper.anyStartWithStr("Map", paramDTs)) cu.addImport("java.util.Map");
         if (NameMapper.anyStartWithStr("Set", paramDTs)) cu.addImport("java.util.Set");
         if (NameMapper.anyStartWithStr("Collection", paramDTs)) cu.addImport("java.util.Collection");
+
+        proto.getDtoMap().keySet().forEach(key -> {
+            if (NameMapper.anyStartWithStr(key, paramDTs)) cu.addImport(proto.getDtoMap().get(key));
+        });
     }
 
     private void generateMethods(ClassOrInterfaceDeclaration classDeclaration, Endpoint endpoint, ProtoObject proto) {

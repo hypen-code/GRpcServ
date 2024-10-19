@@ -108,6 +108,7 @@ public class ProtoGenerator extends AbstractMojo {
 
         Map<String, String> dtoMap = generateImportMap(cu);
         dtoMap.put("package", cu.getPackageDeclaration().orElseThrow().getNameAsString());
+        protoObject.setDtoMap(dtoMap);
         NameMapper nm = NameMapper.getInstance(project, dtoMap);
 
         for (MethodDeclaration method : methods) {
@@ -150,16 +151,6 @@ public class ProtoGenerator extends AbstractMojo {
             protoObjects.add(protoObject);
         }
     }
-//
-//    private String mapFQN(String s, Map<String, String> dtoMap) {
-//        if (GrpcDataTranslator.JAVA_DATA_TYPES.contains(s)) return s;
-//        if (dtoMap.containsKey(s)) {
-//            return project.getBasedir() + "/src/main/java/" + dtoMap.get(s).replace('.', '/') + ".java";
-//        } else {
-////            Assume Classes in same package
-//            return project.getBasedir() + "/src/main/java/" + dtoMap.get("package").replace('.', '/') + "/" + s + ".java";
-//        }
-//    }
 
     public static Map<String, String> generateImportMap(CompilationUnit cu) {
         Map<String, String> dtoMap = new HashMap<>();
