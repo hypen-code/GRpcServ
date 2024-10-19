@@ -1,7 +1,22 @@
 package org.hypen.GRpcServ.utils;
 
+import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.EnumConstantDeclaration;
+import com.github.javaparser.ast.body.EnumDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.type.Type;
+import org.hypen.GRpcServ.models.Message;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class GrpcDataTranslator {
 
@@ -11,7 +26,7 @@ public class GrpcDataTranslator {
      * @param javaDataType The Java data type to translate.
      * @return The equivalent gRPC data type.
      */
-    public static String translateToGrpcDataType(String javaDataType) {
+    public static String translateToGrpcDataType(String javaDataType, Set<Message> msgList) {
         // Pattern to extract inner types from generics
         Pattern genericPattern = Pattern.compile("<(.*?)>");
         long closeCount = javaDataType.chars().filter(c -> c == '>').count();
@@ -21,7 +36,7 @@ public class GrpcDataTranslator {
             System.out.println("List: "+ javaDataType);
             Matcher matcher = genericPattern.matcher(javaDataType);
             if (matcher.find()) {
-                String elementType = translateToGrpcDataType(matcher.group(1) + String.valueOf('>').repeat((int) (closeCount-1)));
+                String elementType = translateToGrpcDataType(matcher.group(1) + String.valueOf('>').repeat((int) (closeCount-1)), msgList);
                 return "repeated " + elementType;
             } else {
                 return "repeated <unknown>";
@@ -33,8 +48,8 @@ public class GrpcDataTranslator {
             if (matcher.find()) {
                 String[] types = matcher.group(1).split(",");
                 if (types.length == 2) {
-                    String keyType = translateToGrpcDataType(types[0].trim());
-                    String valueType = translateToGrpcDataType(types[1].trim() + String.valueOf('>').repeat((int) (closeCount-1)));
+                    String keyType = translateToGrpcDataType(types[0].trim(), msgList);
+                    String valueType = translateToGrpcDataType(types[1].trim() + String.valueOf('>').repeat((int) (closeCount-1)), msgList);
                     return "map<" + keyType + ", " + valueType + ">";
                 } else {
                     return "map<unknown, unknown>";
@@ -54,8 +69,83 @@ public class GrpcDataTranslator {
                 case "byte[]" -> "bytes";
                 case "Date", "Instant" -> "google.protobuf.Timestamp";
                 case "Duration" -> "google.protobuf.Duration";
-                default -> "unknown";
+                default ->  translateClass(javaDataType, msgList);
             };
         }
+    }
+
+    /**
+     * Translates a Java class or enum type to its equivalent gRPC message or enum definition.
+     *
+     * @param javaDataType The fully qualified name of the Java class or enum to translate.
+     * @return The gRPC message or enum definition as a string.
+     */
+    public static String translateClass(String javaDataType, Set<Message> msgList) {
+        try {
+            System.out.println("FQN: "+javaDataType);
+            CompilationUnit cu = StaticJavaParser.parse(new File(javaDataType));
+
+            // Check if it's an enum
+            Optional<EnumDeclaration> enumDeclaration = cu.findFirst(EnumDeclaration.class);
+            if (enumDeclaration.isPresent()) {
+//                return translateEnumToGrpc(enumDeclaration.get());
+            }
+
+            // Otherwise, treat it as a class and create a message
+            Optional<ClassOrInterfaceDeclaration> classDeclaration = cu.findFirst(ClassOrInterfaceDeclaration.class);
+            if (classDeclaration.isPresent()) {
+                return translateClassToGrpcMessage(classDeclaration.get(), msgList);
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error translating class: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Translates a Java enum to a gRPC enum definition.
+     *
+     * @param enumDeclaration The JavaParser EnumDeclaration object.
+     * @return The gRPC enum definition as a string.
+     */
+    private static String translateEnumToGrpc(EnumDeclaration enumDeclaration) {
+        StringBuilder grpcEnum = new StringBuilder("enum ");
+        grpcEnum.append(enumDeclaration.getNameAsString()+"Enum").append(" {\n");
+
+        // Add enum constants
+        for (EnumConstantDeclaration constant : enumDeclaration.getEntries()) {
+            int index = enumDeclaration.getEntries().indexOf(constant);
+            grpcEnum.append("  ")
+                    .append(constant.getNameAsString())
+                    .append(" = ")
+                    .append(index)
+                    .append(";\n");
+        }
+
+        grpcEnum.append("}\n");
+        return grpcEnum.toString();
+    }
+
+    /**
+     * Translates a Java class to a gRPC message definition.
+     *
+     * @param classDeclaration The JavaParser ClassOrInterfaceDeclaration object.
+     * @return The gRPC message definition as a string.
+     */
+    private static String translateClassToGrpcMessage(ClassOrInterfaceDeclaration classDeclaration, Set<Message> msgList) {
+        String fields = IntStream.range(0, classDeclaration.getFields().size())
+                .mapToObj(i -> String.format("\t%s %s = %d;",
+                        GrpcDataTranslator.translateToGrpcDataType(classDeclaration.getFields().get(i).getVariable(0).getType().toString(), msgList),
+                        classDeclaration.getFields().get(i).getVariable(0).getNameAsString(), i + 1))
+                .collect(Collectors.joining("\n"));
+
+        Message msg = new Message(
+                classDeclaration.getNameAsString()+"Dto",
+                fields
+        );
+
+        msgList.add(msg);
+        return msg.getName();
     }
 }

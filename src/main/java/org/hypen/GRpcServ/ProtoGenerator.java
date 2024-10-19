@@ -98,6 +98,8 @@ public class ProtoGenerator extends AbstractMojo {
         List<MethodDeclaration> methods = cu.findAll(MethodDeclaration.class,
                 m -> m.getAnnotationByName("GRpcServ").isPresent());
 
+        Map<String, String> dtoMap = generateImportMap(cu);
+
         for (MethodDeclaration method : methods) {
             getLog().info("\t\tParsing method: " + method.getNameAsString());
             List<com.github.javaparser.ast.body.Parameter> params = method.getParameters();
@@ -105,14 +107,14 @@ public class ProtoGenerator extends AbstractMojo {
                     method.getNameAsString() + "Request",
                     IntStream.range(0, params.size())
                             .mapToObj(i -> String.format("\t%s %s = %d;",
-                                    GrpcDataTranslator.translateToGrpcDataType(params.get(i).getTypeAsString()),
+                                    GrpcDataTranslator.translateToGrpcDataType(mapFQN(params.get(i).getTypeAsString(),dtoMap), protoObject.getMessages()),
                                     params.get(i).getNameAsString(), i + 1))
                             .collect(Collectors.joining("\n"))
             );
 
             Message response = new Message(
                     method.getNameAsString() + "Response",
-                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(method.getTypeAsString()), "response")
+                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(mapFQN(method.getTypeAsString(), dtoMap), protoObject.getMessages()), "response")
             );
 
             Map<String, String> metaParams = method.getParameters().stream()
@@ -135,6 +137,30 @@ public class ProtoGenerator extends AbstractMojo {
             generateProtoFiles(protoObject, outputDir);
             protoObjects.add(protoObject);
         }
+    }
+
+    private String mapFQN(String s, Map<String, String> dtoMap) {
+        if (dtoMap.containsKey(s)) {
+            return project.getBasedir() + "/src/main/java/" + dtoMap.get(s).replace('.', '/')+".java";
+        }
+        return s;
+    }
+
+    private Map<String, String> generateImportMap(CompilationUnit cu) {
+        Map<String, String> dtoMap = new HashMap<>();
+        cu.getImports().forEach(importDecl -> {
+            String importStr = importDecl.toString().replace("import ", "");
+            importStr = importStr.replace(";", "").trim();
+
+            String[] importArr = importStr.split("\\.");
+            int lastElement = importArr.length-1;
+            if (importArr[lastElement].equals("*")){
+//                TODO Handle * imports
+            } else {
+                dtoMap.put(importArr[lastElement].trim(), importStr);
+            }
+        });
+        return dtoMap;
     }
 
     private void generateProtoFiles(@NotNull ProtoObject protoObject, @NotNull String outputDirectory)
