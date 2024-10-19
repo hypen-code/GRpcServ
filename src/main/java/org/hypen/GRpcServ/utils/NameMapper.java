@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
+
 public class NameMapper {
     private static volatile NameMapper instance;
 
@@ -64,5 +66,13 @@ public class NameMapper {
 
     public static boolean fileExists(String filePath) {
         return Files.exists(Paths.get(filePath));
+    }
+
+    public static String getterName(String fieldName, String suffix){
+        return "get" + capitalizeFirstLetter(fieldName) + suffix;
+    }
+
+    public static String setterName(String fieldName, String suffix){
+        return "set" + capitalizeFirstLetter(fieldName) + suffix;
     }
 }
