@@ -19,11 +19,15 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.hypen.GRpcServ.models.Endpoint;
 import org.hypen.GRpcServ.models.ProtoObject;
+import org.hypen.GRpcServ.utils.NameMapper;
 import org.springframework.util.CollectionUtils;
 
+import javax.naming.NameParser;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
 
@@ -56,14 +60,17 @@ public class ServiceGenerator extends AbstractMojo {
         cu.setPackageDeclaration(defaultPackage);
 
         proto.getMessages().forEach(message -> cu.addImport(defaultPackage + "." + message.getName()));
-        if (proto.getMessages().stream().anyMatch(msg -> msg.getFields().contains("repeated")))
-            cu.addImport("java.util.List");
-        if (proto.getMessages().stream().anyMatch(msg -> msg.getFields().contains("map")))
-            cu.addImport("java.util.Map");
         cu.addImport("io.grpc.Status");
         cu.addImport("io.grpc.stub.StreamObserver");
         cu.addImport("org.lognet.springboot.grpc.GRpcService");
         cu.addImport("org.springframework.beans.factory.annotation.Autowired");
+
+        List<String> paramDTs = new ArrayList<>();
+        proto.getEndpoints().forEach(e->paramDTs.addAll(e.getParams().values().stream().toList()));
+        if (NameMapper.anyStartWithStr("List", paramDTs)) cu.addImport("java.util.List");
+        if (NameMapper.anyStartWithStr("Map", paramDTs)) cu.addImport("java.util.Map");
+        if (NameMapper.anyStartWithStr("Set", paramDTs)) cu.addImport("java.util.Set");
+        if (NameMapper.anyStartWithStr("Collection", paramDTs)) cu.addImport("java.util.Collection");
 
         ClassOrInterfaceDeclaration classDeclaration = cu.addClass(proto.getServiceName() + "Gen").setModifiers(Modifier.Keyword.PUBLIC);
         classDeclaration.addAnnotation(new MarkerAnnotationExpr("GRpcService"));

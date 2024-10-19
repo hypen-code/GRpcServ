@@ -118,7 +118,7 @@ public class ProtoGenerator extends AbstractMojo {
                     method.getNameAsString() + "Request",
                     IntStream.range(0, params.size())
                             .mapToObj(i -> String.format("\t%s %s = %d;",
-                                    GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(params.get(i).getTypeAsString()), protoObject.getMessages()),
+                                    GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(params.get(i).getTypeAsString()), protoObject),
                                     params.get(i).getNameAsString(), i + 1))
                             .collect(Collectors.joining("\n"))
             );
@@ -126,7 +126,7 @@ public class ProtoGenerator extends AbstractMojo {
             Message response = new Message(
                     Message.Type.GRpcMessage,
                     method.getNameAsString() + "Response",
-                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(method.getTypeAsString()), protoObject.getMessages()), "response")
+                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(method.getTypeAsString()), protoObject), "response")
             );
 
             Map<String, String> metaParams = method.getParameters().stream()
@@ -186,6 +186,8 @@ public class ProtoGenerator extends AbstractMojo {
         data.put("packageName", protoObject.getPackageName());
         data.put("serviceName", protoObject.getServiceName());
         data.put("javaMultipleFiles", protoObject.getJavaMultipleFiles());
+
+        data.put("imports", protoObject.getImports());
 
         List<Map<String, String>> endpoints = new ArrayList<>();
         protoObject.getEndpoints().forEach(endpoint -> {

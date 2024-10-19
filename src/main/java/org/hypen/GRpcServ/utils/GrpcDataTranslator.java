@@ -8,6 +8,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.hypen.GRpcServ.ProtoGenerator;
 import org.hypen.GRpcServ.models.Message;
+import org.hypen.GRpcServ.models.ProtoObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,7 +30,7 @@ public class GrpcDataTranslator {
     MavenProject project;
 
     public static List<String> JAVA_DATA_TYPES = Arrays.asList("int", "Integer", "long", "Long", "float", "Float", "double", "Double", "boolean", "Boolean", "String", "byte[]", "Date", "Instant", "Duration");
-    public static List<String> JAVA_DATA_COLLECTIONS = Arrays.asList("List", "Map", "Set", "Collection", "Iterable");
+    public static List<String> JAVA_DATA_COLLECTIONS = Arrays.asList("List", "Map", "Set", "Collection");
 
     /**
      * Translates a Java data type to its equivalent gRPC data type.
@@ -38,17 +38,17 @@ public class GrpcDataTranslator {
      * @param javaDataType The Java data type to translate.
      * @return The equivalent gRPC data type.
      */
-    public static String translateToGrpcDataType(String javaDataType, Set<Message> msgList) {
+    public static String translateToGrpcDataType(String javaDataType, ProtoObject protoObject) {
         // Pattern to extract inner types from generics
         NameMapper nm = NameMapper.getInstance();
         Pattern genericPattern = Pattern.compile("<(.*?)>");
         long closeCount = javaDataType.chars().filter(c -> c == '>').count();
 
-        if (javaDataType.startsWith("List") || javaDataType.startsWith("Set") || javaDataType.startsWith("Collection") || javaDataType.startsWith("Iterable")) {
+        if (javaDataType.startsWith("List") || javaDataType.startsWith("Set") || javaDataType.startsWith("Collection")) {
             // Handle List types
             Matcher matcher = genericPattern.matcher(javaDataType);
             if (matcher.find()) {
-                String elementType = translateToGrpcDataType(nm.mapFQN(matcher.group(1) + String.valueOf('>').repeat((int) (closeCount - 1))), msgList);
+                String elementType = translateToGrpcDataType(nm.mapFQN(matcher.group(1) + String.valueOf('>').repeat((int) (closeCount - 1))), protoObject);
                 return "repeated " + elementType;
             } else {
                 return "repeated <unknown>";
@@ -59,8 +59,8 @@ public class GrpcDataTranslator {
             if (matcher.find()) {
                 String[] types = matcher.group(1).split(",");
                 if (types.length == 2) {
-                    String keyType = translateToGrpcDataType(nm.mapFQN(types[0].trim()), msgList);
-                    String valueType = translateToGrpcDataType(nm.mapFQN(types[1].trim() + String.valueOf('>').repeat((int) (closeCount - 1))), msgList);
+                    String keyType = translateToGrpcDataType(nm.mapFQN(types[0].trim()), protoObject);
+                    String valueType = translateToGrpcDataType(nm.mapFQN(types[1].trim() + String.valueOf('>').repeat((int) (closeCount - 1))), protoObject);
                     return "map<" + keyType + ", " + valueType + ">";
                 } else {
                     return "map<unknown, unknown>";
@@ -78,9 +78,15 @@ public class GrpcDataTranslator {
                 case "boolean", "Boolean" -> "bool";
                 case "String" -> "string";
                 case "byte[]" -> "bytes";
-                case "Date", "Instant" -> "google.protobuf.Timestamp";
-                case "Duration" -> "google.protobuf.Duration";
-                default -> translateClass(javaDataType, msgList);
+                case "Date", "Instant" -> {
+                    protoObject.getImports().add("google/protobuf/timestamp.proto");
+                    yield "google.protobuf.Timestamp";
+                }
+                case "Duration" -> {
+                    protoObject.getImports().add("google/protobuf/duration.proto");
+                    yield "google.protobuf.Duration";
+                }
+                default -> translateClass(javaDataType, protoObject);
             };
         }
     }
@@ -91,7 +97,7 @@ public class GrpcDataTranslator {
      * @param javaDataType The fully qualified name of the Java class or enum to translate.
      * @return The gRPC message or enum definition as a string.
      */
-    public static String translateClass(String javaDataType, Set<Message> msgList) {
+    public static String translateClass(String javaDataType, ProtoObject protoObject) {
         try {
             log.info("\t\t\tObject FQN: {}", javaDataType);
             CompilationUnit cu = StaticJavaParser.parse(new File(javaDataType));
@@ -100,13 +106,13 @@ public class GrpcDataTranslator {
             // Check if it's an enum
             Optional<EnumDeclaration> enumDeclaration = cu.findFirst(EnumDeclaration.class);
             if (enumDeclaration.isPresent()) {
-                return translateEnumToGrpc(enumDeclaration.get(), msgList);
+                return translateEnumToGrpc(enumDeclaration.get(), protoObject);
             }
 
             // Otherwise, treat it as a class and create a message
             Optional<ClassOrInterfaceDeclaration> classDeclaration = cu.findFirst(ClassOrInterfaceDeclaration.class);
             if (classDeclaration.isPresent()) {
-                return translateClassToGrpcMessage(classDeclaration.get(), msgList);
+                return translateClassToGrpcMessage(classDeclaration.get(), protoObject);
             }
 
         } catch (IOException e) {
@@ -121,7 +127,7 @@ public class GrpcDataTranslator {
      * @param enumDeclaration The JavaParser EnumDeclaration object.
      * @return The gRPC enum definition as a string.
      */
-    private static String translateEnumToGrpc(EnumDeclaration enumDeclaration, Set<Message> msgList) {
+    private static String translateEnumToGrpc(EnumDeclaration enumDeclaration, ProtoObject protoObject) {
         String fields = IntStream.range(0, enumDeclaration.getEntries().size())
                 .mapToObj(i -> String.format("\t%s = %d;",
                         enumDeclaration.getEntry(i).asEnumConstantDeclaration().getNameAsString(), i))
@@ -132,7 +138,7 @@ public class GrpcDataTranslator {
                 enumDeclaration.getNameAsString() + "Enum",
                 fields
         );
-        msgList.add(msg);
+        protoObject.getMessages().add(msg);
         return msg.getName();
     }
 
@@ -142,11 +148,11 @@ public class GrpcDataTranslator {
      * @param classDeclaration The JavaParser ClassOrInterfaceDeclaration object.
      * @return The gRPC message definition as a string.
      */
-    private static String translateClassToGrpcMessage(ClassOrInterfaceDeclaration classDeclaration, Set<Message> msgList) {
+    private static String translateClassToGrpcMessage(ClassOrInterfaceDeclaration classDeclaration, ProtoObject protoObject) {
         NameMapper nm = NameMapper.getInstance();
         String fields = IntStream.range(0, classDeclaration.getFields().size())
                 .mapToObj(i -> String.format("\t%s %s = %d;",
-                        GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(classDeclaration.getFields().get(i).getVariable(0).getType().toString()), msgList),
+                        GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(classDeclaration.getFields().get(i).getVariable(0).getType().toString()), protoObject),
                         classDeclaration.getFields().get(i).getVariable(0).getNameAsString(), i + 1))
                 .collect(Collectors.joining("\n"));
 
@@ -156,7 +162,7 @@ public class GrpcDataTranslator {
                 fields
         );
 
-        msgList.add(msg);
+        protoObject.getMessages().add(msg);
         return msg.getName();
     }
 }

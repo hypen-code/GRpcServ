@@ -17,4 +17,5 @@ public class ProtoObject implements Serializable {
     String serviceName;
     List<Endpoint> endpoints = new ArrayList<>(1);
     Set<Message> messages = new HashSet<>(2);
+    Set<String> imports = new HashSet<>(0);
 }

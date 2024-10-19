@@ -1,5 +1,9 @@
 syntax = "proto3";
 
+<#list imports as import>
+import "${import}";
+</#list>
+
 package ${packageName}.${serviceName}Gen;
 
 <#if javaMultipleFiles??>option java_multiple_files = ${javaMultipleFiles?c};</#if>

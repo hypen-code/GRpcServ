@@ -55,12 +55,11 @@ public class NameMapper {
     }
 
     public static boolean startsWithAny(String str, List<String> prefixes) {
-        for (String prefix : prefixes) {
-            if (str.startsWith(prefix)) {
-                return true;
-            }
-        }
-        return false;
+        return prefixes.stream().anyMatch(str::startsWith);
+    }
+
+    public static boolean anyStartWithStr(String prefix, List<String> strings) {
+        return strings.stream().anyMatch(str -> str.startsWith(prefix));
     }
 
     public static boolean fileExists(String filePath) {
