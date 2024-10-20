@@ -18,8 +18,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.hypen.GRpcServ.models.Endpoint;
+import org.hypen.GRpcServ.models.Message;
 import org.hypen.GRpcServ.models.ProtoObject;
 import org.hypen.GRpcServ.utils.NameMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import java.io.*;
@@ -34,6 +37,7 @@ import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
 @Mojo(name = "svc-gen", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class ServiceGenerator extends AbstractMojo {
 
+    private static final Logger log = LoggerFactory.getLogger(ServiceGenerator.class);
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     MavenProject project;
 
@@ -202,10 +206,14 @@ public class ServiceGenerator extends AbstractMojo {
             }
 
             if (enumDeclaration.isPresent()){
-                ClassOrInterfaceType enumType = StaticJavaParser.parseClassOrInterfaceType(dataType + "Enum");
+                String enumName = dataType + "Enum";
+                String parentDtoName = parents.get(parents.size() - 2) + "Dto";
+                Message message = proto.getMessages().stream().filter(e -> e.getName().equals(parentDtoName)).findFirst().orElseThrow();
+                String fieldName = NameMapper.extractWordAfter(enumName, message.getFields());
 
+                ClassOrInterfaceType enumType = StaticJavaParser.parseClassOrInterfaceType(enumName);
                 NameExpr methodResponseExpr = new NameExpr("methodResponse"); // TODO modify
-                MethodCallExpr getTypeExpr = new MethodCallExpr(methodResponseExpr, "getType"); // TODO modify
+                MethodCallExpr getTypeExpr = new MethodCallExpr(methodResponseExpr, NameMapper.getterName(fieldName, ""));
 
                 MethodCallExpr getNameExpr = new MethodCallExpr(getTypeExpr, "name");
 

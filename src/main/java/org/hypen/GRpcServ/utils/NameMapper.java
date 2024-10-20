@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
 
@@ -74,5 +76,16 @@ public class NameMapper {
 
     public static String setterName(String fieldName, String suffix){
         return "set" + capitalizeFirstLetter(fieldName) + suffix;
+    }
+
+    public static String extractWordAfter(String targetWord, String input) {
+        Pattern pattern = Pattern.compile("\\b" + targetWord + "\\s+(\\w+)\\b");
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            return null;
+        }
     }
 }
