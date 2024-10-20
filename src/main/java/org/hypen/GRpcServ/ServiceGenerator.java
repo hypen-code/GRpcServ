@@ -22,9 +22,11 @@ import org.hypen.GRpcServ.models.ProtoObject;
 import org.hypen.GRpcServ.utils.NameMapper;
 import org.springframework.util.CollectionUtils;
 
-import javax.naming.NameParser;
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
@@ -138,7 +140,7 @@ public class ServiceGenerator extends AbstractMojo {
         }
 
         String responseValue = "methodResponse";
-        responseValue = mapDtoOrEnum(endpoint.getParams().get("genResponse"), proto, methodBody, responseValue);
+        responseValue = mapDtoOrEnum(endpoint.getParams().get("genResponse"), proto, methodBody, responseValue, new ArrayList<>());
 
         ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
@@ -158,8 +160,9 @@ public class ServiceGenerator extends AbstractMojo {
         method.setBody(methodBody);
     }
 
-    private String mapDtoOrEnum(String dataType, ProtoObject proto, BlockStmt methodBody, String responseValue) throws FileNotFoundException {
+    private String mapDtoOrEnum(String dataType, ProtoObject proto, BlockStmt methodBody, String responseValue, List<String> parents) throws FileNotFoundException {
         if (proto.getDtoMap().containsKey(dataType)){
+            parents.add(dataType);
             NameMapper nm = NameMapper.getInstance(project, proto.getDtoMap());
             CompilationUnit cu = StaticJavaParser.parse(new File(nm.mapFQN(dataType)));
             Optional<ClassOrInterfaceDeclaration> dtoClassDecl = cu.findFirst(ClassOrInterfaceDeclaration.class);
@@ -173,8 +176,20 @@ public class ServiceGenerator extends AbstractMojo {
                 String name = field.getVariables().get(0).getNameAsString();
                 String fieldDataType = field.getVariable(0).getType().toString();
 
-                setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
-                        .addArgument(responseValue+"."+ NameMapper.getterName(name, "()"));
+                responseValue = mapDtoOrEnum(fieldDataType, proto, methodBody, responseValue, parents);
+
+                if (proto.getDtoMap().containsKey(fieldDataType)) {
+                    setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
+                            .addArgument(responseValue);
+                } else {
+                    String parentGetters = parents.stream().skip(1)
+                            .map(e -> NameMapper.getterName(e, "()"))
+                            .collect(Collectors.joining("."));
+                    if (!parentGetters.isEmpty()) parentGetters = "." + parentGetters;
+
+                    setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
+                            .addArgument(responseValue + parentGetters + "." + NameMapper.getterName(name, "()"));
+                }
             }
 
             responseValue = dataType+"DtoGen";

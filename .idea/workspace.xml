@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="source scanning">
+    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="Response generating">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ServiceGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ServiceGenerator.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -105,7 +106,7 @@
       <recent name="org.hypen.GRpcServ.utils" />
     </key>
   </component>
-  <component name="RunManager" selected="Shell Script.Test">
+  <component name="RunManager" selected="Shell Script.Build">
     <configuration name="Build" type="ShConfigurationType">
       <option name="SCRIPT_TEXT" value="rm -rf ~/.m2/repository/org/HypeN &amp;&amp; mvn clean install" />
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
@@ -160,7 +161,7 @@
       <workItem from="1728801578646" duration="1126000" />
       <workItem from="1728818050730" duration="15750000" />
       <workItem from="1729306209850" duration="23209000" />
-      <workItem from="1729398335197" duration="1534000" />
+      <workItem from="1729398335197" duration="6021000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -266,7 +267,15 @@
       <option name="project" value="LOCAL" />
       <updated>1729340074018</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Response generating">
+      <option name="closed" value="true" />
+      <created>1729403777653</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1729403777653</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -292,7 +301,8 @@
     <MESSAGE value="support same package DTOs" />
     <MESSAGE value="code clean" />
     <MESSAGE value="source scanning" />
-    <option name="LAST_COMMIT_MESSAGE" value="source scanning" />
+    <MESSAGE value="Response generating" />
+    <option name="LAST_COMMIT_MESSAGE" value="Response generating" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
