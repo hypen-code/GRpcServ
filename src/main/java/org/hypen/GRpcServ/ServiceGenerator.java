@@ -166,38 +166,61 @@ public class ServiceGenerator extends AbstractMojo {
             NameMapper nm = NameMapper.getInstance(project, proto.getDtoMap());
             CompilationUnit cu = StaticJavaParser.parse(new File(nm.mapFQN(dataType)));
             Optional<ClassOrInterfaceDeclaration> dtoClassDecl = cu.findFirst(ClassOrInterfaceDeclaration.class);
-            if (dtoClassDecl.isEmpty()) throw new RuntimeException("DTO class not found: " + dataType);
+            Optional<EnumDeclaration> enumDeclaration = cu.findFirst(EnumDeclaration.class);
 
-            ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(dataType+"Dto");
-            MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(grpcType.getName()), "newBuilder");
+            if (dtoClassDecl.isPresent()) {
+                ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(dataType + "Dto");
+                MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(grpcType.getName()), "newBuilder");
 
-            MethodCallExpr setResponse = builderCall;
-            for (FieldDeclaration field : dtoClassDecl.get().getFields()) {
-                String name = field.getVariables().get(0).getNameAsString();
-                String fieldDataType = field.getVariable(0).getType().toString();
+                MethodCallExpr setResponse = builderCall;
+                for (FieldDeclaration field : dtoClassDecl.get().getFields()) {
+                    String name = field.getVariables().get(0).getNameAsString();
+                    String fieldDataType = field.getVariable(0).getType().toString();
 
-                responseValue = mapDtoOrEnum(fieldDataType, proto, methodBody, responseValue, parents);
+                    responseValue = mapDtoOrEnum(fieldDataType, proto, methodBody, responseValue, parents);
 
-                if (proto.getDtoMap().containsKey(fieldDataType)) {
-                    setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
-                            .addArgument(responseValue);
-                } else {
-                    String parentGetters = parents.stream().skip(1)
-                            .map(e -> NameMapper.getterName(e, "()"))
-                            .collect(Collectors.joining("."));
-                    if (!parentGetters.isEmpty()) parentGetters = "." + parentGetters;
+                    if (proto.getDtoMap().containsKey(fieldDataType)) {
+                        setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
+                                .addArgument(responseValue);
+                    } else {
+                        String parentGetters = parents.stream().skip(1)
+                                .map(e -> NameMapper.getterName(e, "()"))
+                                .collect(Collectors.joining("."));
+                        if (!parentGetters.isEmpty()) parentGetters = "." + parentGetters;
 
-                    setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
-                            .addArgument(responseValue + parentGetters + "." + NameMapper.getterName(name, "()"));
+                        setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
+                                .addArgument(responseValue + parentGetters + "." + NameMapper.getterName(name, "()"));
+                    }
                 }
+
+                responseValue = dataType + "DtoGen";
+                MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
+                VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
+                        new VariableDeclarator(grpcType, responseValue, buildCall)
+                );
+                methodBody.addStatement(grpcVariableDeclExpr);
             }
 
-            responseValue = dataType+"DtoGen";
-            MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
-            VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
-                    new VariableDeclarator(grpcType, responseValue, buildCall)
-            );
-            methodBody.addStatement(grpcVariableDeclExpr);
+            if (enumDeclaration.isPresent()){
+                ClassOrInterfaceType enumType = StaticJavaParser.parseClassOrInterfaceType(dataType + "Enum");
+
+                NameExpr methodResponseExpr = new NameExpr("methodResponse"); // TODO modify
+                MethodCallExpr getTypeExpr = new MethodCallExpr(methodResponseExpr, "getType"); // TODO modify
+
+                MethodCallExpr getNameExpr = new MethodCallExpr(getTypeExpr, "name");
+
+                MethodCallExpr valueOfExpr = new MethodCallExpr(new NameExpr(String.valueOf(enumType)), "valueOf");
+                valueOfExpr.addArgument(getNameExpr);
+
+                responseValue = dataType + "EnumGen";
+                VariableDeclarationExpr variableDecl = new VariableDeclarationExpr(
+                        new VariableDeclarator(enumType, responseValue, valueOfExpr)
+                );
+
+                methodBody.addStatement(new ExpressionStmt(variableDecl));
+            }
+
+            parents.remove(parents.size()-1);
         }
         return responseValue;
     }
