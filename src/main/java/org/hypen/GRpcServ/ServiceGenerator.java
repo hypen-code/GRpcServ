@@ -18,11 +18,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.hypen.GRpcServ.models.Endpoint;
+import org.hypen.GRpcServ.models.Message;
 import org.hypen.GRpcServ.models.ProtoObject;
 import org.hypen.GRpcServ.utils.NameMapper;
 import org.springframework.util.CollectionUtils;
 
-import javax.naming.NameParser;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -141,29 +141,7 @@ public class ServiceGenerator extends AbstractMojo {
         }
 
         String responseValue = "methodResponse";
-        if (proto.getDtoMap().containsKey(endpoint.getParams().get("genResponse"))){
-            NameMapper nm = NameMapper.getInstance(project, proto.getDtoMap());
-            CompilationUnit cu = StaticJavaParser.parse(new File(nm.mapFQN(endpoint.getParams().get("genResponse"))));
-            Optional<ClassOrInterfaceDeclaration> dtoClassDecl = cu.findFirst(ClassOrInterfaceDeclaration.class);
-            if (dtoClassDecl.isEmpty()) throw new RuntimeException("DTO class not found: " + endpoint.getParams().get("genResponse"));
-
-            ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getParams().get("genResponse")+"Dto");
-            MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(grpcType.getName()), "newBuilder");
-
-            MethodCallExpr setResponse = builderCall;
-            for (FieldDeclaration field : dtoClassDecl.get().getFields()) {
-                String name = field.getVariables().get(0).getNameAsString();
-                setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
-                        .addArgument("methodResponse."+ NameMapper.getterName(name, "()"));
-            }
-
-            MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
-            VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
-                    new VariableDeclarator(grpcType, "dtoResponseGen", buildCall)
-            );
-            methodBody.addStatement(grpcVariableDeclExpr);
-            responseValue = "dtoResponseGen";
-        }
+        responseValue = mapDtoOrEnum(endpoint.getParams().get("genResponse"), proto, methodBody, responseValue, new ArrayList<>());
 
         ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
@@ -181,6 +159,76 @@ public class ServiceGenerator extends AbstractMojo {
         methodBody.addStatement(onCompletedCall);
 
         method.setBody(methodBody);
+    }
+
+    private String mapDtoOrEnum(String dataType, ProtoObject proto, BlockStmt methodBody, String responseValue, List<String> parents) throws FileNotFoundException {
+        if (proto.getDtoMap().containsKey(dataType)){
+            parents.add(dataType);
+            NameMapper nm = NameMapper.getInstance(project, proto.getDtoMap());
+            CompilationUnit cu = StaticJavaParser.parse(new File(nm.mapFQN(dataType)));
+            Optional<ClassOrInterfaceDeclaration> dtoClassDecl = cu.findFirst(ClassOrInterfaceDeclaration.class);
+            Optional<EnumDeclaration> enumDeclaration = cu.findFirst(EnumDeclaration.class);
+
+            if (dtoClassDecl.isPresent()) {
+                ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(dataType + "Dto");
+                MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(grpcType.getName()), "newBuilder");
+
+                MethodCallExpr setResponse = builderCall;
+                for (FieldDeclaration field : dtoClassDecl.get().getFields()) {
+                    String name = field.getVariables().get(0).getNameAsString();
+                    String fieldDataType = field.getVariable(0).getType().toString();
+
+                    responseValue = mapDtoOrEnum(fieldDataType, proto, methodBody, responseValue, parents);
+
+                    if (proto.getDtoMap().containsKey(fieldDataType)) {
+                        setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
+                                .addArgument(responseValue);
+                    } else {
+                        String parentGetters = parents.stream().skip(1)
+                                .map(e -> NameMapper.getterName(e, "()"))
+                                .collect(Collectors.joining("."));
+                        if (!parentGetters.isEmpty()) parentGetters = "." + parentGetters;
+
+                        setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
+                                .addArgument(responseValue + parentGetters + "." + NameMapper.getterName(name, "()"));
+                    }
+                }
+
+                responseValue = dataType + "DtoGen";
+                MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
+                VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
+                        new VariableDeclarator(grpcType, responseValue, buildCall)
+                );
+                methodBody.addStatement(grpcVariableDeclExpr);
+            }
+
+            if (enumDeclaration.isPresent()){
+                String enumName = dataType + "Enum";
+                String parentDtoName = parents.get(parents.size() - 2) + "Dto";
+                Message message = proto.getMessages().stream().filter(e -> e.getName().equals(parentDtoName)).findFirst().orElseThrow();
+                String fieldName = NameMapper.extractWordAfter(enumName, message.getFields());
+
+                String responseCatcher = parents.size() > 2 ? parentDtoName + "Gen" : "methodResponse";
+                ClassOrInterfaceType enumType = StaticJavaParser.parseClassOrInterfaceType(enumName);
+                NameExpr methodResponseExpr = new NameExpr(responseCatcher);
+                MethodCallExpr getTypeExpr = new MethodCallExpr(methodResponseExpr, NameMapper.getterName(fieldName, ""));
+
+                MethodCallExpr getNameExpr = new MethodCallExpr(getTypeExpr, "name");
+
+                MethodCallExpr valueOfExpr = new MethodCallExpr(new NameExpr(String.valueOf(enumType)), "valueOf");
+                valueOfExpr.addArgument(getNameExpr);
+
+                responseValue = dataType + "EnumGen";
+                VariableDeclarationExpr variableDecl = new VariableDeclarationExpr(
+                        new VariableDeclarator(enumType, responseValue, valueOfExpr)
+                );
+
+                methodBody.addStatement(new ExpressionStmt(variableDecl));
+            }
+
+            parents.remove(parents.size()-1);
+        }
+        return responseValue;
     }
 
     public static String translateToObjectName(String javaDataType) {
