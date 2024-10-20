@@ -24,10 +24,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.naming.NameParser;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
@@ -141,29 +138,7 @@ public class ServiceGenerator extends AbstractMojo {
         }
 
         String responseValue = "methodResponse";
-        if (proto.getDtoMap().containsKey(endpoint.getParams().get("genResponse"))){
-            NameMapper nm = NameMapper.getInstance(project, proto.getDtoMap());
-            CompilationUnit cu = StaticJavaParser.parse(new File(nm.mapFQN(endpoint.getParams().get("genResponse"))));
-            Optional<ClassOrInterfaceDeclaration> dtoClassDecl = cu.findFirst(ClassOrInterfaceDeclaration.class);
-            if (dtoClassDecl.isEmpty()) throw new RuntimeException("DTO class not found: " + endpoint.getParams().get("genResponse"));
-
-            ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getParams().get("genResponse")+"Dto");
-            MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(grpcType.getName()), "newBuilder");
-
-            MethodCallExpr setResponse = builderCall;
-            for (FieldDeclaration field : dtoClassDecl.get().getFields()) {
-                String name = field.getVariables().get(0).getNameAsString();
-                setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
-                        .addArgument("methodResponse."+ NameMapper.getterName(name, "()"));
-            }
-
-            MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
-            VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
-                    new VariableDeclarator(grpcType, "dtoResponseGen", buildCall)
-            );
-            methodBody.addStatement(grpcVariableDeclExpr);
-            responseValue = "dtoResponseGen";
-        }
+        responseValue = mapDtoOrEnum(endpoint.getParams().get("genResponse"), proto, methodBody, responseValue);
 
         ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
@@ -181,6 +156,35 @@ public class ServiceGenerator extends AbstractMojo {
         methodBody.addStatement(onCompletedCall);
 
         method.setBody(methodBody);
+    }
+
+    private String mapDtoOrEnum(String dataType, ProtoObject proto, BlockStmt methodBody, String responseValue) throws FileNotFoundException {
+        if (proto.getDtoMap().containsKey(dataType)){
+            NameMapper nm = NameMapper.getInstance(project, proto.getDtoMap());
+            CompilationUnit cu = StaticJavaParser.parse(new File(nm.mapFQN(dataType)));
+            Optional<ClassOrInterfaceDeclaration> dtoClassDecl = cu.findFirst(ClassOrInterfaceDeclaration.class);
+            if (dtoClassDecl.isEmpty()) throw new RuntimeException("DTO class not found: " + dataType);
+
+            ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(dataType+"Dto");
+            MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(grpcType.getName()), "newBuilder");
+
+            MethodCallExpr setResponse = builderCall;
+            for (FieldDeclaration field : dtoClassDecl.get().getFields()) {
+                String name = field.getVariables().get(0).getNameAsString();
+                String fieldDataType = field.getVariable(0).getType().toString();
+
+                setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
+                        .addArgument(responseValue+"."+ NameMapper.getterName(name, "()"));
+            }
+
+            responseValue = dataType+"DtoGen";
+            MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
+            VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
+                    new VariableDeclarator(grpcType, responseValue, buildCall)
+            );
+            methodBody.addStatement(grpcVariableDeclExpr);
+        }
+        return responseValue;
     }
 
     public static String translateToObjectName(String javaDataType) {
