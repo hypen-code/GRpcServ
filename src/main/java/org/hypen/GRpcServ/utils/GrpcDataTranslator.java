@@ -102,6 +102,9 @@ public class GrpcDataTranslator {
             log.info("\t\t\tObject FQN: {}", javaDataType);
             CompilationUnit cu = StaticJavaParser.parse(new File(javaDataType));
             NameMapper.getInstance().getDtoMap().putAll(ProtoGenerator.generateImportMap(cu));
+            NameMapper.getInstance().getDtoMap().put("package",
+                    NameMapper.getInstance().getDtoMap().get("package") + "," +
+                            cu.getPackageDeclaration().orElseThrow().getNameAsString());
 
             // Check if it's an enum
             Optional<EnumDeclaration> enumDeclaration = cu.findFirst(EnumDeclaration.class);
