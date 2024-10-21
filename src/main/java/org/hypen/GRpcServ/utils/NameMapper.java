@@ -1,6 +1,7 @@
 package org.hypen.GRpcServ.utils;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.maven.project.MavenProject;
 
 import java.nio.file.Files;
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
 
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
 
+@Slf4j
 public class NameMapper {
     private static volatile NameMapper instance;
 
@@ -52,15 +54,18 @@ public class NameMapper {
                 String path = sourceRoot + "/" + dtoMap.get(s).replace('.', '/') + ".java";
                 if (fileExists(path)) return path;
             }
+            log.warn("File not found - source dirs: {}", String.join(",", sourceRoots));
             throw new RuntimeException("File not found: " + s);
         } else {
 //            Assume Class in same package
             for (String sourceRoot : sourceRoots){
                 for (String pkg: dtoMap.get("package").split(",")){
-                    String path = sourceRoot + "/" + pkg.replace('.', '/') + ".java";
+                    String path = sourceRoot + "/" + pkg.replace('.', '/') + "/" + s + ".java";
                     if (fileExists(path)) return path;
                 }
             }
+            log.warn("File not found - source dirs: {}", String.join(",", sourceRoots));
+            log.warn("File not found - packages: {}", dtoMap.get("package"));
             throw new RuntimeException("File not found in same package: " + s);
         }
     }
