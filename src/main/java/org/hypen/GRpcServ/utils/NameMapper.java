@@ -1,6 +1,7 @@
 package org.hypen.GRpcServ.utils;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.maven.project.MavenProject;
 
 import java.nio.file.Files;
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
 
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
 
+@Slf4j
 public class NameMapper {
     private static volatile NameMapper instance;
 
@@ -45,16 +47,26 @@ public class NameMapper {
     public String mapFQN(String s) {
         if (GrpcDataTranslator.JAVA_DATA_TYPES.contains(s)) return s;
         if (startsWithAny(s, GrpcDataTranslator.JAVA_DATA_COLLECTIONS)) return s;
+
+        List<String> sourceRoots = project.getCompileSourceRoots();
         if (dtoMap.containsKey(s)) {
-            List<String> sourceRoots = project.getCompileSourceRoots();
             for (String sourceRoot : sourceRoots){
                 String path = sourceRoot + "/" + dtoMap.get(s).replace('.', '/') + ".java";
                 if (fileExists(path)) return path;
             }
+            log.warn("File not found - source dirs: {}", String.join(",", sourceRoots));
             throw new RuntimeException("File not found: " + s);
         } else {
 //            Assume Class in same package
-            return project.getBasedir() + "/src/main/java/" + dtoMap.get("package").replace('.', '/') + "/" + s + ".java";
+            for (String sourceRoot : sourceRoots){
+                for (String pkg: dtoMap.get("package").split(",")){
+                    String path = sourceRoot + "/" + pkg.replace('.', '/') + "/" + s + ".java";
+                    if (fileExists(path)) return path;
+                }
+            }
+            log.warn("File not found - source dirs: {}", String.join(",", sourceRoots));
+            log.warn("File not found - packages: {}", dtoMap.get("package"));
+            throw new RuntimeException("File not found in same package: " + s);
         }
     }
 
