@@ -69,8 +69,21 @@ public class ServiceGenerator extends AbstractMojo {
         classDeclaration.setExtendedTypes(NodeList.nodeList(superclass));
 
         FieldDeclaration field = classDeclaration.addField(StaticJavaParser.parseType(proto.getServiceName()), proto.getServiceName());
+        field.setModifiers(Modifier.Keyword.PRIVATE);
         field.addAnnotation(new MarkerAnnotationExpr("Autowired"));
         cu.addImport(proto.getPackageName() + "." + proto.getServiceName());
+
+        ClassOrInterfaceType modelMapperType = StaticJavaParser.parseClassOrInterfaceType("ModelMapper");
+        ObjectCreationExpr objectCreationExpr = new ObjectCreationExpr();
+        objectCreationExpr.setType(modelMapperType);
+        VariableDeclarator variableDeclarator = new VariableDeclarator();
+        variableDeclarator.setName("modelMapper");
+        variableDeclarator.setType(modelMapperType);
+        variableDeclarator.setInitializer(objectCreationExpr);
+        FieldDeclaration fieldDeclaration = new FieldDeclaration();
+        fieldDeclaration.setModifiers(Modifier.Keyword.PRIVATE);
+        fieldDeclaration.addVariable(variableDeclarator);
+        classDeclaration.addMember(fieldDeclaration);
 
         proto.getEndpoints().forEach(endpoint -> {
             try {
@@ -89,6 +102,7 @@ public class ServiceGenerator extends AbstractMojo {
         cu.addImport("io.grpc.stub.StreamObserver");
         cu.addImport("org.lognet.springboot.grpc.GRpcService");
         cu.addImport("org.springframework.beans.factory.annotation.Autowired");
+        cu.addImport("org.modelmapper.ModelMapper");
 
         List<String> paramDTs = new ArrayList<>();
         proto.getEndpoints().forEach(e->paramDTs.addAll(e.getParams().values().stream().toList()));
@@ -122,7 +136,9 @@ public class ServiceGenerator extends AbstractMojo {
             String collectionModifier = "";
             if (param.getValue().startsWith("List")) collectionModifier = "List";
             if (param.getValue().startsWith("Map")) collectionModifier = "Map";
-            methodCallExpr.addArgument(new NameExpr(getGetterName(param.getKey(), collectionModifier)));
+
+            String varName = generateRequestParamMapping(getGetterName(param.getKey(), collectionModifier), param, methodBody, proto);
+            methodCallExpr.addArgument(new NameExpr(varName));
         }
         VariableDeclarationExpr variableDeclExpr = new VariableDeclarationExpr(
                 new VariableDeclarator(returnType, "methodResponse", methodCallExpr)
@@ -159,6 +175,26 @@ public class ServiceGenerator extends AbstractMojo {
         methodBody.addStatement(onCompletedCall);
 
         method.setBody(methodBody);
+    }
+
+    private String generateRequestParamMapping(String getterName, Map.Entry<String, String> param, BlockStmt methodBody, ProtoObject proto) {
+        if (proto.getDtoMap().containsKey(param.getValue())) {
+            String varName = param.getKey() + "RequestDto";
+
+            ClassOrInterfaceType dataType = StaticJavaParser.parseClassOrInterfaceType(param.getValue());
+            MethodCallExpr methodCallExpr = new MethodCallExpr();
+            methodCallExpr.setScope(new NameExpr("modelMapper"));
+            methodCallExpr.setName("map");
+            methodCallExpr.addArgument(new NameExpr(getterName));
+            methodCallExpr.addArgument(new ClassExpr(dataType));
+
+            VariableDeclarationExpr variableDecl = new VariableDeclarationExpr(
+                    new VariableDeclarator(dataType, varName, methodCallExpr)
+            );
+            methodBody.addStatement(new ExpressionStmt(variableDecl));
+            return varName;
+        }
+        return getterName;
     }
 
     private String mapDtoOrEnum(String dataType, ProtoObject proto, BlockStmt methodBody, String responseValue, List<String> parents) throws FileNotFoundException {
