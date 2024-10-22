@@ -15,6 +15,14 @@ definitions (proto files) and corresponding services Java code based on your exi
 
 ### Installation
 
+1. **Clone repository [https://github.com/hypen-code/GRpcServ.git](https://github.com/hypen-code/GRpcServ.git)**
+1. **Run command:**
+   ```bash
+   mvn clean install
+   ```
+
+### Setting up your project
+
 1. **Add the plugin to your project's `pom.xml`:**
    ```xml
    <plugin>
