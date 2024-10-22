@@ -175,14 +175,15 @@ public class ServiceGenerator extends AbstractMojo {
 
                 MethodCallExpr setResponse = builderCall;
                 for (FieldDeclaration field : dtoClassDecl.get().getFields()) {
+                    String innerResponseValue = responseValue;
                     String name = field.getVariables().get(0).getNameAsString();
                     String fieldDataType = field.getVariable(0).getType().toString();
 
-                    responseValue = mapDtoOrEnum(fieldDataType, proto, methodBody, responseValue, parents);
+                    innerResponseValue = mapDtoOrEnum(fieldDataType, proto, methodBody, innerResponseValue, parents);
 
                     if (proto.getDtoMap().containsKey(fieldDataType)) {
                         setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
-                                .addArgument(responseValue);
+                                .addArgument(innerResponseValue);
                     } else {
                         String parentGetters = parents.stream().skip(1)
                                 .map(e -> NameMapper.getterName(e, "()"))
@@ -190,7 +191,7 @@ public class ServiceGenerator extends AbstractMojo {
                         if (!parentGetters.isEmpty()) parentGetters = "." + parentGetters;
 
                         setResponse = new MethodCallExpr(setResponse, NameMapper.setterName(name, ""))
-                                .addArgument(responseValue + parentGetters + "." + NameMapper.getterName(name, "()"));
+                                .addArgument(innerResponseValue + parentGetters + "." + NameMapper.getterName(name, "()"));
                     }
                 }
 
