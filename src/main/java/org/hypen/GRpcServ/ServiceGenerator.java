@@ -8,6 +8,8 @@ import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
+import com.github.javaparser.ast.stmt.ForEachStmt;
+import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import org.apache.maven.plugin.AbstractMojo;
@@ -28,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
@@ -106,6 +110,7 @@ public class ServiceGenerator extends AbstractMojo {
 
         List<String> paramDTs = new ArrayList<>();
         proto.getEndpoints().forEach(e->paramDTs.addAll(e.getParams().values().stream().toList()));
+        cu.addImport("java.util.ArrayList");
         if (NameMapper.anyStartWithStr("List", paramDTs)) cu.addImport("java.util.List");
         if (NameMapper.anyStartWithStr("Map", paramDTs)) cu.addImport("java.util.Map");
         if (NameMapper.anyStartWithStr("Set", paramDTs)) cu.addImport("java.util.Set");
@@ -128,7 +133,6 @@ public class ServiceGenerator extends AbstractMojo {
 
         BlockStmt methodBody = new BlockStmt();
 
-        ClassOrInterfaceType returnType = StaticJavaParser.parseClassOrInterfaceType(translateToObjectName(endpoint.getParams().get("genResponse")));
         MethodCallExpr methodCallExpr = new MethodCallExpr(new NameExpr(proto.getServiceName()), endpoint.getName());
         for (Map.Entry<String, String> param : endpoint.getParams().entrySet()) {
             if (param.getKey().equals("genResponse")) continue;
@@ -140,10 +144,15 @@ public class ServiceGenerator extends AbstractMojo {
             String varName = generateRequestParamMapping(getGetterName(param.getKey(), collectionModifier), param, methodBody, proto);
             methodCallExpr.addArgument(new NameExpr(varName));
         }
-        VariableDeclarationExpr variableDeclExpr = new VariableDeclarationExpr(
-                new VariableDeclarator(returnType, "methodResponse", methodCallExpr)
-        );
-        methodBody.addStatement(variableDeclExpr);
+        if (endpoint.getParams().get("genResponse").equals("void")){
+            methodBody.addStatement(methodCallExpr);
+        } else {
+            ClassOrInterfaceType returnType = StaticJavaParser.parseClassOrInterfaceType(translateToObjectName(endpoint.getParams().get("genResponse")));
+            VariableDeclarationExpr variableDeclExpr = new VariableDeclarationExpr(
+                    new VariableDeclarator(returnType, "methodResponse", methodCallExpr)
+            );
+            methodBody.addStatement(variableDeclExpr);
+        }
 
         String responseType = "setResponse";
         if (endpoint.getParams().containsKey("genResponse")) {
@@ -157,11 +166,16 @@ public class ServiceGenerator extends AbstractMojo {
         }
 
         String responseValue = "methodResponse";
-        responseValue = mapDtoOrEnum(endpoint.getParams().get("genResponse"), proto, methodBody, responseValue, new ArrayList<>());
-
         ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
-        MethodCallExpr setResponse = new MethodCallExpr(builderCall, responseType).addArgument(responseValue);
+        MethodCallExpr setResponse;
+        if (endpoint.getParams().get("genResponse").equals("void")){
+            setResponse = builderCall;
+        } else {
+            responseValue = mapDtoOrEnum(endpoint.getParams().get("genResponse"), proto, methodBody, responseValue, new ArrayList<>());
+            setResponse = new MethodCallExpr(builderCall, responseType).addArgument(responseValue);
+        }
+
         MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
         VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
                 new VariableDeclarator(grpcType, endpoint.getResponse().getName() + "Gen", buildCall)
@@ -245,7 +259,7 @@ public class ServiceGenerator extends AbstractMojo {
                 Message message = proto.getMessages().stream().filter(e -> e.getName().equals(parentDtoName)).findFirst().orElseThrow();
                 String fieldName = NameMapper.extractWordAfter(enumName, message.getFields());
 
-                String responseCatcher = parents.size() > 2 ? parentDtoName + "Gen" : "methodResponse";
+                String responseCatcher = parents.size() > 2 ? parentDtoName + "Gen" : responseValue;
                 ClassOrInterfaceType enumType = StaticJavaParser.parseClassOrInterfaceType(enumName);
                 NameExpr methodResponseExpr = new NameExpr(responseCatcher);
                 MethodCallExpr getTypeExpr = new MethodCallExpr(methodResponseExpr, NameMapper.getterName(fieldName, ""));
@@ -264,6 +278,42 @@ public class ServiceGenerator extends AbstractMojo {
             }
 
             parents.remove(parents.size()-1);
+        } else if (dataType.startsWith("List")) {
+            Pattern genericPattern = Pattern.compile("<(.*?)>");
+            Matcher matcher = genericPattern.matcher(dataType);
+            if (matcher.find()) {
+                dataType = matcher.group(1);
+                String dtoName = dataType+"Dto";
+                parents.add(dataType.toLowerCase());
+
+                VariableDeclarationExpr declaration = new VariableDeclarationExpr(
+                        new VariableDeclarator(
+                                StaticJavaParser.parseType("List<"+dtoName+">"),
+                                dtoName+"List",
+                                new ObjectCreationExpr(null, StaticJavaParser.parseClassOrInterfaceType("ArrayList"), NodeList.nodeList())
+                        )
+                );
+                methodBody.addStatement(declaration);
+
+                ForEachStmt forEachStmt = new ForEachStmt();
+                VariableDeclarationExpr variableDecl = new VariableDeclarationExpr(
+                        new VariableDeclarator(StaticJavaParser.parseType(dataType), dataType.toLowerCase())
+                );
+                forEachStmt.setVariable(variableDecl);
+                forEachStmt.setIterable(new NameExpr(responseValue));
+
+                BlockStmt loopBody = new BlockStmt();
+                responseValue = mapDtoOrEnum(dataType, proto, loopBody, dataType.toLowerCase(), new ArrayList<>());
+
+                MethodCallExpr addCall = new MethodCallExpr(new NameExpr(dtoName+"List"), "add")
+                        .addArgument(new NameExpr(responseValue));
+                loopBody.addStatement(new ExpressionStmt(addCall));
+                forEachStmt.setBody(loopBody);
+
+                responseValue = dtoName+"List";
+                methodBody.addStatement(forEachStmt);
+                parents.remove(parents.size()-1);
+            }
         }
         return responseValue;
     }
