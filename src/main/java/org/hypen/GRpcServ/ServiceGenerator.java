@@ -6,10 +6,7 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
-import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.stmt.ExpressionStmt;
-import com.github.javaparser.ast.stmt.ForEachStmt;
-import com.github.javaparser.ast.stmt.ReturnStmt;
+import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import org.apache.maven.plugin.AbstractMojo;
@@ -42,6 +39,9 @@ public class ServiceGenerator extends AbstractMojo {
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     MavenProject project;
 
+    @Parameter(property = "enablePrintException", readonly = true, defaultValue = "false")
+    private boolean enablePrintException;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         List<ProtoObject> protoObjects;
@@ -67,6 +67,7 @@ public class ServiceGenerator extends AbstractMojo {
         generateImports(proto, cu, defaultPackage);
 
         ClassOrInterfaceDeclaration classDeclaration = cu.addClass(proto.getServiceName() + "Gen").setModifiers(Modifier.Keyword.PUBLIC);
+        classDeclaration.addAnnotation(new MarkerAnnotationExpr("Slf4j"));
         classDeclaration.addAnnotation(new MarkerAnnotationExpr("GRpcService"));
         ClassOrInterfaceType superclass = StaticJavaParser.parseClassOrInterfaceType(proto.getServiceName() + "Grpc." + proto.getServiceName() + "ImplBase");
         cu.addImport(defaultPackage + "." + proto.getServiceName() + "Grpc");
@@ -107,6 +108,8 @@ public class ServiceGenerator extends AbstractMojo {
         cu.addImport("org.lognet.springboot.grpc.GRpcService");
         cu.addImport("org.springframework.beans.factory.annotation.Autowired");
         cu.addImport("org.modelmapper.ModelMapper");
+        cu.addImport("org.hypen.GRpcServ.utils.ExceptionToGrpcStatus");
+        cu.addImport("lombok.extern.slf4j.Slf4j");
 
         List<String> paramDTs = new ArrayList<>();
         proto.getEndpoints().forEach(e->paramDTs.addAll(e.getParams().values().stream().toList()));
@@ -188,7 +191,28 @@ public class ServiceGenerator extends AbstractMojo {
         MethodCallExpr onCompletedCall = new MethodCallExpr(new NameExpr("responseObserver"), "onCompleted");
         methodBody.addStatement(onCompletedCall);
 
-        method.setBody(methodBody);
+//        Exception handling for Grpc status
+        BlockStmt catchBlock = new BlockStmt();
+        if (enablePrintException) {
+            NodeList<Expression> arguments = NodeList.nodeList(new MethodCallExpr(new NameExpr("ex"), "getMessage"), new NameExpr("ex"));
+            catchBlock.addStatement(new MethodCallExpr(new NameExpr("log"), "error", arguments));
+        }
+        catchBlock.addStatement(new ExpressionStmt(
+                new MethodCallExpr( new NameExpr("responseObserver"), "onError",
+                        NodeList.nodeList(new MethodCallExpr(new MethodCallExpr(new NameExpr("ExceptionToGrpcStatus"), "translateExceptionToStatus").addArgument(new NameExpr("ex")), "asRuntimeException"))
+                )
+        ));
+
+        TryStmt tryStmt = new TryStmt();
+        tryStmt.setTryBlock(methodBody);
+        CatchClause catchClause = new CatchClause();
+        catchClause.setParameter(new com.github.javaparser.ast.body.Parameter(StaticJavaParser.parseType("Exception"), "ex"));
+        catchClause.setBody(catchBlock);
+        tryStmt.getCatchClauses().add(catchClause);
+
+        BlockStmt blockStmt = new BlockStmt();
+        blockStmt.addStatement(tryStmt);
+        method.setBody(blockStmt);
     }
 
     private String generateRequestParamMapping(String getterName, Map.Entry<String, String> param, BlockStmt methodBody, ProtoObject proto) {
