@@ -133,7 +133,6 @@ public class ServiceGenerator extends AbstractMojo {
 
         BlockStmt methodBody = new BlockStmt();
 
-        ClassOrInterfaceType returnType = StaticJavaParser.parseClassOrInterfaceType(translateToObjectName(endpoint.getParams().get("genResponse")));
         MethodCallExpr methodCallExpr = new MethodCallExpr(new NameExpr(proto.getServiceName()), endpoint.getName());
         for (Map.Entry<String, String> param : endpoint.getParams().entrySet()) {
             if (param.getKey().equals("genResponse")) continue;
@@ -145,10 +144,15 @@ public class ServiceGenerator extends AbstractMojo {
             String varName = generateRequestParamMapping(getGetterName(param.getKey(), collectionModifier), param, methodBody, proto);
             methodCallExpr.addArgument(new NameExpr(varName));
         }
-        VariableDeclarationExpr variableDeclExpr = new VariableDeclarationExpr(
-                new VariableDeclarator(returnType, "methodResponse", methodCallExpr)
-        );
-        methodBody.addStatement(variableDeclExpr);
+        if (endpoint.getParams().get("genResponse").equals("void")){
+            methodBody.addStatement(methodCallExpr);
+        } else {
+            ClassOrInterfaceType returnType = StaticJavaParser.parseClassOrInterfaceType(translateToObjectName(endpoint.getParams().get("genResponse")));
+            VariableDeclarationExpr variableDeclExpr = new VariableDeclarationExpr(
+                    new VariableDeclarator(returnType, "methodResponse", methodCallExpr)
+            );
+            methodBody.addStatement(variableDeclExpr);
+        }
 
         String responseType = "setResponse";
         if (endpoint.getParams().containsKey("genResponse")) {
@@ -162,11 +166,16 @@ public class ServiceGenerator extends AbstractMojo {
         }
 
         String responseValue = "methodResponse";
-        responseValue = mapDtoOrEnum(endpoint.getParams().get("genResponse"), proto, methodBody, responseValue, new ArrayList<>());
-
         ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
-        MethodCallExpr setResponse = new MethodCallExpr(builderCall, responseType).addArgument(responseValue);
+        MethodCallExpr setResponse;
+        if (endpoint.getParams().get("genResponse").equals("void")){
+            setResponse = builderCall;
+        } else {
+            responseValue = mapDtoOrEnum(endpoint.getParams().get("genResponse"), proto, methodBody, responseValue, new ArrayList<>());
+            setResponse = new MethodCallExpr(builderCall, responseType).addArgument(responseValue);
+        }
+
         MethodCallExpr buildCall = new MethodCallExpr(setResponse, "build");
         VariableDeclarationExpr grpcVariableDeclExpr = new VariableDeclarationExpr(
                 new VariableDeclarator(grpcType, endpoint.getResponse().getName() + "Gen", buildCall)

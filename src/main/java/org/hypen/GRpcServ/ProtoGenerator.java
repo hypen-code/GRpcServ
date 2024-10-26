@@ -127,6 +127,7 @@ public class ProtoGenerator extends AbstractMojo {
             Message response = new Message(
                     Message.Type.GRpcMessage,
                     method.getNameAsString() + "Response",
+                    method.getTypeAsString().equals("void")? "" :
                     String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(method.getTypeAsString()), protoObject), "response")
             );
 
