@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 <#list imports as import>
-import "${import}";
+    import "${import}";
 </#list>
 
 package ${packageName}.${serviceName}Gen;
@@ -17,13 +17,13 @@ service ${serviceName} {
 }
 
 <#list messages as message>
-message ${message.name} {
-${message.fields}
-}
+    message ${message.name} {
+    ${message.fields}
+    }
 </#list>
 
 <#list enums as enum>
-enum ${enum.name} {
-${enum.fields}
-}
+    enum ${enum.name} {
+    ${enum.fields}
+    }
 </#list>

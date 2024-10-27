@@ -60,19 +60,19 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Generates a gRPC service implementation class from a {@link ProtoObject}.
-     *
+     * <p>
      * This method takes a {@link ProtoObject} representing a gRPC service definition
      * and generates a Java class that implements the service. The generated class
      * includes:
-     *
+     * <p>
      * - Necessary imports based on the service definition.
      * - A class declaration annotated with `@Slf4j` and `@GRpcService`.
      * - A field declaration for the service implementation, annotated with `@Autowired`.
      * - A field declaration for a `ModelMapper` instance.
      * - Method implementations for each endpoint defined in the {@link ProtoObject},
-     *   handling request parameter mapping, service method invocation, response mapping,
-     *   and exception handling.
-     *
+     * handling request parameter mapping, service method invocation, response mapping,
+     * and exception handling.
+     * <p>
      * The generated Java class file is then written to the `target/generated-sources/protosvc`
      * directory within the project.
      *
@@ -127,7 +127,7 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Generates and adds necessary import statements to the given CompilationUnit based on the ProtoObject and default package.
-     *
+     * <p>
      * This method iterates through the messages in the ProtoObject and adds import statements for each message
      * using the provided default package. It also adds imports for commonly used classes like
      * `io.grpc.Status`, `io.grpc.stub.StreamObserver`, Spring annotations, ModelMapper,
@@ -148,7 +148,7 @@ public class ServiceGenerator extends AbstractMojo {
         cu.addImport("lombok.extern.slf4j.Slf4j");
 
         List<String> paramDTs = new ArrayList<>();
-        proto.getEndpoints().forEach(e->paramDTs.addAll(e.getParams().values().stream().toList()));
+        proto.getEndpoints().forEach(e -> paramDTs.addAll(e.getParams().values().stream().toList()));
         cu.addImport("java.util.ArrayList");
         if (NameMapper.anyStartWithStr("List", paramDTs)) cu.addImport("java.util.List");
         if (NameMapper.anyStartWithStr("Map", paramDTs)) cu.addImport("java.util.Map");
@@ -162,10 +162,10 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Generates a gRPC service method for the given endpoint.
-     *
+     * <p>
      * This method creates a new method declaration in the given class declaration,
      * representing a gRPC service method that corresponds to the provided endpoint.
-     *
+     * <p>
      * The generated method handles the following:
      * - Mapping request parameters from the gRPC request object to local variables.
      * - Invoking the corresponding method in the service implementation.
@@ -203,7 +203,7 @@ public class ServiceGenerator extends AbstractMojo {
             String varName = generateRequestParamMapping(getGetterName(param.getKey(), collectionModifier), param, methodBody, proto);
             methodCallExpr.addArgument(new NameExpr(varName));
         }
-        if (endpoint.getParams().get("genResponse").equals("void")){
+        if (endpoint.getParams().get("genResponse").equals("void")) {
 //            Handle void return type in method
             methodBody.addStatement(methodCallExpr);
         } else {
@@ -232,7 +232,7 @@ public class ServiceGenerator extends AbstractMojo {
         ClassOrInterfaceType grpcType = StaticJavaParser.parseClassOrInterfaceType(endpoint.getResponse().getName());
         MethodCallExpr builderCall = new MethodCallExpr(new NameExpr(endpoint.getResponse().getName()), "newBuilder");
         MethodCallExpr setResponse;
-        if (endpoint.getParams().get("genResponse").equals("void")){
+        if (endpoint.getParams().get("genResponse").equals("void")) {
 //            Handle void return type
             setResponse = builderCall;
         } else {
@@ -262,7 +262,7 @@ public class ServiceGenerator extends AbstractMojo {
             catchBlock.addStatement(new MethodCallExpr(new NameExpr("log"), "error", arguments));
         }
         catchBlock.addStatement(new ExpressionStmt(
-                new MethodCallExpr( new NameExpr("responseObserver"), "onError",
+                new MethodCallExpr(new NameExpr("responseObserver"), "onError",
                         NodeList.nodeList(new MethodCallExpr(new MethodCallExpr(new NameExpr("ExceptionToGrpcStatus"), "translateExceptionToStatus").addArgument(new NameExpr("ex")), "asRuntimeException"))
                 )
         ));
@@ -281,15 +281,15 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Generates code to map a request parameter from the gRPC request object to a local variable.
-     *
+     * <p>
      * This method handles the mapping of a single request parameter. If the parameter type is a DTO,
      * it uses ModelMapper to map the corresponding object from the gRPC request to a local variable
      * of the DTO type. Otherwise, it simply uses the provided getter expression to access the parameter value.
      *
-     * @param getterName  The expression to get the parameter value from the gRPC request object.
+     * @param getterName The expression to get the parameter value from the gRPC request object.
      * @param param      The parameter information, including its name and data type.
      * @param methodBody The method body where the generated code will be added.
-     * @param proto     The {@link ProtoObject} containing the service definition and message/enum mappings.
+     * @param proto      The {@link ProtoObject} containing the service definition and message/enum mappings.
      * @return The name of the local variable holding the mapped parameter value.
      */
     private String generateRequestParamMapping(String getterName, Map.Entry<String, String> param, BlockStmt methodBody, ProtoObject proto) {
@@ -315,20 +315,20 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Recursively maps a Java data type to its corresponding gRPC message or enum representation.
-     *
+     * <p>
      * This method handles the mapping of complex data types, including nested DTOs, enums, and collections (Lists).
      * It recursively traverses the object graph, generating the necessary code to map each field to its gRPC equivalent.
      *
      * @param dataType      The Java data type to map (e.g., "Student", "List<Student>", "StudentType").
-     * @param proto        The {@link ProtoObject} containing the service definition and message/enum mappings.
+     * @param proto         The {@link ProtoObject} containing the service definition and message/enum mappings.
      * @param methodBody    The {@link BlockStmt} representing the method body where the mapping code will be added.
      * @param responseValue The current value being mapped (could be a variable name or a more complex expression).
-     * @param parents      A list of parent data types to keep track of the recursion depth and handle nested objects.
+     * @param parents       A list of parent data types to keep track of the recursion depth and handle nested objects.
      * @return The updated response value after mapping the given data type.
      * @throws FileNotFoundException If a Java source file for a DTO or enum cannot be found.
      */
     private String mapDtoOrEnum(String dataType, ProtoObject proto, BlockStmt methodBody, String responseValue, List<String> parents) throws FileNotFoundException {
-        if (proto.getDtoMap().containsKey(dataType)){
+        if (proto.getDtoMap().containsKey(dataType)) {
 //            Mapping DTOs recursively
             parents.add(dataType);
             NameMapper nm = NameMapper.getInstance(project, proto.getDtoMap());
@@ -376,7 +376,7 @@ public class ServiceGenerator extends AbstractMojo {
                 methodBody.addStatement(grpcVariableDeclExpr);
             }
 
-            if (enumDeclaration.isPresent()){
+            if (enumDeclaration.isPresent()) {
 //                Process enum class
                 String enumName = dataType + "Enum";
                 String parentDtoName = parents.get(parents.size() - 2) + "Dto";
@@ -403,21 +403,21 @@ public class ServiceGenerator extends AbstractMojo {
                 methodBody.addStatement(new ExpressionStmt(variableDecl));
             }
 
-            parents.remove(parents.size()-1);
+            parents.remove(parents.size() - 1);
         } else if (dataType.startsWith("List")) {
 //            Mapping List of DTOs
             Pattern genericPattern = Pattern.compile("<(.*?)>");
             Matcher matcher = genericPattern.matcher(dataType);
             if (matcher.find()) {
                 dataType = matcher.group(1);
-                String dtoName = dataType+"Dto";
+                String dtoName = dataType + "Dto";
                 parents.add(dataType.toLowerCase());
 
 //                Create list to collect objects
                 VariableDeclarationExpr declaration = new VariableDeclarationExpr(
                         new VariableDeclarator(
-                                StaticJavaParser.parseType("List<"+dtoName+">"),
-                                dtoName+"List",
+                                StaticJavaParser.parseType("List<" + dtoName + ">"),
+                                dtoName + "List",
                                 new ObjectCreationExpr(null, StaticJavaParser.parseClassOrInterfaceType("ArrayList"), NodeList.nodeList())
                         )
                 );
@@ -435,14 +435,14 @@ public class ServiceGenerator extends AbstractMojo {
                 responseValue = mapDtoOrEnum(dataType, proto, loopBody, dataType.toLowerCase(), new ArrayList<>());
 
 //                Generate statement
-                MethodCallExpr addCall = new MethodCallExpr(new NameExpr(dtoName+"List"), "add")
+                MethodCallExpr addCall = new MethodCallExpr(new NameExpr(dtoName + "List"), "add")
                         .addArgument(new NameExpr(responseValue));
                 loopBody.addStatement(new ExpressionStmt(addCall));
                 forEachStmt.setBody(loopBody);
 
-                responseValue = dtoName+"List";
+                responseValue = dtoName + "List";
                 methodBody.addStatement(forEachStmt);
-                parents.remove(parents.size()-1);
+                parents.remove(parents.size() - 1);
             }
         }
         return responseValue;
@@ -450,7 +450,7 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Translates a Java primitive data type to its corresponding wrapper class name.
-     *
+     * <p>
      * This method takes a Java primitive data type (e.g., "int", "long", "boolean")
      * and returns the name of its corresponding wrapper class (e.g., "Integer", "Long", "Boolean").
      * For non-primitive data types, the input string is returned unchanged.
@@ -471,7 +471,7 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Generates the name of a getter method for a field, optionally considering a collection modifier.
-     *
+     * <p>
      * This method takes a field name and a collection modifier (e.g., "List", "Map", or an empty string).
      * It constructs and returns the name of a getter method for the field, capitalizing the first letter
      * of the field name and appending the collection modifier if provided.
@@ -486,11 +486,11 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Generates a GRPC reflection service class for the given proto object.
-     *
+     * <p>
      * This method creates a new Java class that extends the `ProtoReflectionService`
      * and annotates it with `@GRpcService`. This service is responsible for providing
      * reflection information about the defined GRPC services.
-     *
+     * <p>
      * The generated class includes a constructor that takes a `ServerBuilder`
      * and registers the `ProtoReflectionService` with it.
      *
@@ -523,7 +523,7 @@ public class ServiceGenerator extends AbstractMojo {
 
     /**
      * Writes a Java class file to the generated sources directory.
-     *
+     * <p>
      * This method takes a {@link CompilationUnit} representing a Java class and a file name,
      * and writes the class definition to a file with the given name in the generated sources directory.
      * The directory structure for the package of the class is created if it doesn't exist.

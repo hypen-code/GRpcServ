@@ -79,7 +79,7 @@ public class ProtoGenerator extends AbstractMojo {
 
     /**
      * Generates proto files for all Java classes annotated with `@GRpcServ` in the given source directory.
-     *
+     * <p>
      * This method iterates through all files in the source directory and its subdirectories.
      * For each Java file encountered, it parses the file and extracts all methods annotated with `@GRpcServ`.
      * For each annotated method, it generates a corresponding proto file containing the service definition,
@@ -87,7 +87,7 @@ public class ProtoGenerator extends AbstractMojo {
      *
      * @param sourceDirectory The path to the source directory containing the Java files to process.
      * @throws TemplateException If an error occurs while processing the Freemarker template for the proto file.
-     * @throws IOException If an error occurs while reading or writing files.
+     * @throws IOException       If an error occurs while reading or writing files.
      */
     private void generateProtoFiles(String sourceDirectory) throws TemplateException, IOException {
         getLog().info("Source directory: " + sourceDirectory);
@@ -98,7 +98,7 @@ public class ProtoGenerator extends AbstractMojo {
                     getLog().info("\tProcessing source file: " + file.getName());
                     try {
                         parseMethodsByAnnotation(file.getAbsolutePath());
-                    } catch (RuntimeException runtimeException){
+                    } catch (RuntimeException runtimeException) {
                         getLog().warn(runtimeException.getMessage());
                     }
                 }
@@ -108,7 +108,7 @@ public class ProtoGenerator extends AbstractMojo {
 
     /**
      * Parses a Java source file for methods annotated with `@GRpcServ` and generates a {@link ProtoObject} representing the service.
-     *
+     * <p>
      * This method reads the Java source file located at the given `sourceDir`, parses it using JavaParser,
      * and extracts all methods annotated with `@GRpcServ`. For each annotated method, it creates
      * corresponding request and response messages, and adds them to a {@link ProtoObject} along with
@@ -156,8 +156,8 @@ public class ProtoGenerator extends AbstractMojo {
             Message response = new Message(
                     Message.Type.GRpcMessage,
                     method.getNameAsString() + "Response",
-                    method.getTypeAsString().equals("void")? "" :
-                    String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(method.getTypeAsString()), protoObject), "response")
+                    method.getTypeAsString().equals("void") ? "" :
+                            String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(method.getTypeAsString()), protoObject), "response")
             );
 
 //            Identify data types used in method and added into metaParams map with parameter name
@@ -186,7 +186,7 @@ public class ProtoGenerator extends AbstractMojo {
 
     /**
      * Generates a map of class simple names to their fully qualified names from the imports of a CompilationUnit.
-     *
+     * <p>
      * This method iterates through the imports of a given CompilationUnit and extracts the simple name
      * and fully qualified name of each imported class. It handles both single class imports and wildcard imports.
      * For wildcard imports, it currently logs a warning as they are not fully supported.
@@ -215,12 +215,12 @@ public class ProtoGenerator extends AbstractMojo {
 
     /**
      * Generates a .proto file from a {@link ProtoObject}.
-     *
+     * <p>
      * This method takes a {@link ProtoObject} and an output directory, and generates a .proto file
      * representing the service defined in the {@link ProtoObject}. The generated file includes the
      * service definition, message definitions, and enum definitions.
      *
-     * @param protoObject      The {@link ProtoObject} containing the service definition to generate.
+     * @param protoObject     The {@link ProtoObject} containing the service definition to generate.
      * @param outputDirectory The directory where the generated .proto file should be written.
      * @throws IOException       If an I/O error occurs while writing the .proto file.
      * @throws TemplateException If an error occurs while processing the Freemarker template.

@@ -34,13 +34,13 @@ public class GrpcDataTranslator {
 
     /**
      * Translates a Java data type to its equivalent gRPC data type.
-     *
+     * <p>
      * This method takes a Java data type as a string and a {@link ProtoObject}.
      * It handles simple types, collections (List, Map, Set, Collection), and custom classes.
      * For custom classes, it recursively translates them to gRPC messages or enums.
      *
      * @param javaDataType The Java data type to translate.
-     * @param protoObject The {@link ProtoObject} representing the current protobuf definition, used for adding imports.
+     * @param protoObject  The {@link ProtoObject} representing the current protobuf definition, used for adding imports.
      * @return The equivalent gRPC data type.
      */
     public static String translateToGrpcDataType(String javaDataType, ProtoObject protoObject) {
@@ -98,7 +98,7 @@ public class GrpcDataTranslator {
 
     /**
      * Translates a Java class or enum type to its equivalent gRPC message or enum definition.
-     *
+     * <p>
      * This method takes the fully qualified name of a Java class or enum and a {@link ProtoObject}.
      * It parses the Java file, extracts necessary information for the `dtoMap`, and then
      * delegates the translation to either {@link #translateEnumToGrpc} for enums or
@@ -138,12 +138,12 @@ public class GrpcDataTranslator {
 
     /**
      * Translates a Java enum to a gRPC enum definition.
-     *
+     * <p>
      * This method takes a JavaParser {@link EnumDeclaration} representing a Java enum
      * and a {@link ProtoObject}. It iterates through the enum constants, assigns them
      * sequential numerical values starting from 0, and constructs a gRPC enum definition
      * string with constant names and their corresponding values.
-     *
+     * <p>
      * The generated enum definition is then wrapped in a {@link Message} object and added to the
      * `messages` list of the provided {@link ProtoObject}.
      *
@@ -168,17 +168,17 @@ public class GrpcDataTranslator {
 
     /**
      * Translates a Java class to a gRPC message definition.
-     *
+     * <p>
      * This method takes a JavaParser {@link ClassOrInterfaceDeclaration} representing a Java class
      * and a {@link ProtoObject}. It iterates through the fields of the class, translates each field's
      * data type to its equivalent gRPC data type using {@link GrpcDataTranslator#translateToGrpcDataType},
      * and constructs a gRPC message definition string with field names and their corresponding types.
-     *
+     * <p>
      * The generated message definition is then wrapped in a {@link Message} object and added to the
      * `messages` list of the provided {@link ProtoObject}.
      *
      * @param classDeclaration The JavaParser {@link ClassOrInterfaceDeclaration} representing the Java class to translate.
-     * @param protoObject     The {@link ProtoObject} representing the current protobuf definition, used for adding the generated message.
+     * @param protoObject      The {@link ProtoObject} representing the current protobuf definition, used for adding the generated message.
      * @return The name of the generated gRPC message.
      */
     private static String translateClassToGrpcMessage(ClassOrInterfaceDeclaration classDeclaration, ProtoObject protoObject) {

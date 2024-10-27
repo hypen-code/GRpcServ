@@ -46,19 +46,19 @@ public class NameMapper {
 
     /**
      * Maps a simple class name or data type to its fully qualified name or file path.
-     *
+     * <p>
      * This method takes a string representing a class simple name or a Java data type.
      * It first checks if the input is a known Java data type or a collection type.
      * If so, it returns the input string as is.
-     *
+     * <p>
      * If the input is a class simple name present in the `dtoMap`, it searches for the corresponding
      * Java file in the project's source roots using the fully qualified name from the `dtoMap`.
      * If the file is found, it returns the absolute path to the file.
-     *
+     * <p>
      * If the input is not found in the `dtoMap`, it assumes the class is in the same package as the
      * classes defined in the `dtoMap` and searches for the corresponding Java file in the project's
      * source roots. If the file is found, it returns the absolute path to the file.
-     *
+     * <p>
      * If the file is not found in any of the source roots, it throws a RuntimeException.
      *
      * @param s The simple class name or Java data type to map.
@@ -73,7 +73,7 @@ public class NameMapper {
         List<String> sourceRoots = project.getCompileSourceRoots();
         if (dtoMap.containsKey(s)) {
 //            Includes in dtoMap
-            for (String sourceRoot : sourceRoots){
+            for (String sourceRoot : sourceRoots) {
                 String path = sourceRoot + "/" + dtoMap.get(s).replace('.', '/') + ".java";
                 if (fileExists(path)) return path;
             }
@@ -81,8 +81,8 @@ public class NameMapper {
             throw new RuntimeException("File not found: " + s);
         } else {
 //            Assume Class in same package
-            for (String sourceRoot : sourceRoots){
-                for (String pkg: dtoMap.get("package").split(",")){
+            for (String sourceRoot : sourceRoots) {
+                for (String pkg : dtoMap.get("package").split(",")) {
                     String path = sourceRoot + "/" + pkg.replace('.', '/') + "/" + s + ".java";
                     if (fileExists(path)) return path;
                 }
@@ -127,7 +127,7 @@ public class NameMapper {
 
     /**
      * Generates the name of a getter method for a field, optionally appending a suffix.
-     *
+     * <p>
      * This method takes a field name and a suffix (e.g., "List", "Dto", or an empty string).
      * It constructs and returns the name of a getter method for the field, capitalizing the first letter
      * of the field name and appending the suffix if provided.
@@ -136,13 +136,13 @@ public class NameMapper {
      * @param suffix    The suffix to append to the getter name (e.g., "List", "Dto", "").
      * @return The generated getter method name.
      */
-    public static String getterName(String fieldName, String suffix){
+    public static String getterName(String fieldName, String suffix) {
         return "get" + capitalizeFirstLetter(fieldName) + suffix;
     }
 
     /**
      * Generates the name of a setter method for a field, optionally appending a suffix.
-     *
+     * <p>
      * This method takes a field name and a suffix (e.g., "List", "Dto", or an empty string).
      * It constructs and returns the name of a setter method for the field, capitalizing the first letter
      * of the field name and appending the suffix if provided.
@@ -151,18 +151,18 @@ public class NameMapper {
      * @param suffix    The suffix to append to the setter name (e.g., "List", "Dto", "").
      * @return The generated setter method name.
      */
-    public static String setterName(String fieldName, String suffix){
+    public static String setterName(String fieldName, String suffix) {
         return "set" + capitalizeFirstLetter(fieldName) + suffix;
     }
 
     /**
      * Extracts the word immediately following a target word in a given input string.
-     *
+     * <p>
      * This method uses regular expressions to search for the target word followed by a space and another word.
      * If a match is found, it returns the word that follows the target word. Otherwise, it returns null.
      *
      * @param targetWord The word to search for in the input string.
-     * @param input     The input string to search within.
+     * @param input      The input string to search within.
      * @return The word immediately following the target word, or null if no match is found.
      */
     public static String extractWordAfter(String targetWord, String input) {
