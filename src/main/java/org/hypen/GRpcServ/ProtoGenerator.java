@@ -56,6 +56,7 @@ public class ProtoGenerator extends AbstractMojo {
             return;
         }
 
+//        Process one by one source directories
         Arrays.stream(sourceDirectories.split(","))
                 .map(String::trim)
                 .forEach(dir -> {
@@ -76,6 +77,18 @@ public class ProtoGenerator extends AbstractMojo {
         }
     }
 
+    /**
+     * Generates proto files for all Java classes annotated with `@GRpcServ` in the given source directory.
+     *
+     * This method iterates through all files in the source directory and its subdirectories.
+     * For each Java file encountered, it parses the file and extracts all methods annotated with `@GRpcServ`.
+     * For each annotated method, it generates a corresponding proto file containing the service definition,
+     * message definitions for the request and response objects, and any necessary enum definitions.
+     *
+     * @param sourceDirectory The path to the source directory containing the Java files to process.
+     * @throws TemplateException If an error occurs while processing the Freemarker template for the proto file.
+     * @throws IOException If an error occurs while reading or writing files.
+     */
     private void generateProtoFiles(String sourceDirectory) throws TemplateException, IOException {
         getLog().info("Source directory: " + sourceDirectory);
         File sourceDir = new File(sourceDirectory);
@@ -93,6 +106,18 @@ public class ProtoGenerator extends AbstractMojo {
         }
     }
 
+    /**
+     * Parses a Java source file for methods annotated with `@GRpcServ` and generates a {@link ProtoObject} representing the service.
+     *
+     * This method reads the Java source file located at the given `sourceDir`, parses it using JavaParser,
+     * and extracts all methods annotated with `@GRpcServ`. For each annotated method, it creates
+     * corresponding request and response messages, and adds them to a {@link ProtoObject} along with
+     * the endpoint definition. The generated {@link ProtoObject} is then added to the `protoObjects` list.
+     *
+     * @param sourceDir The path to the Java source file to parse.
+     * @throws IOException       If an I/O error occurs while reading the source file.
+     * @throws TemplateException If an error occurs while processing the Freemarker template for generating the proto file.
+     */
     private void parseMethodsByAnnotation(String sourceDir) throws IOException, TemplateException {
         StaticJavaParser.getParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(sourceDir));
@@ -103,6 +128,7 @@ public class ProtoGenerator extends AbstractMojo {
                 .orElseThrow(() -> new RuntimeException("No class found in the file: " + sourceDir))
                 .getNameAsString());
 
+//        Extract methods which annotated with @GRpcServ
         List<MethodDeclaration> methods = cu.findAll(MethodDeclaration.class,
                 m -> m.getAnnotationByName("GRpcServ").isPresent());
 
@@ -111,9 +137,11 @@ public class ProtoGenerator extends AbstractMojo {
         protoObject.setDtoMap(dtoMap);
         NameMapper nm = NameMapper.getInstance(project, dtoMap);
 
+//        Process each method one by one
         for (MethodDeclaration method : methods) {
             getLog().info("\t\tParsing method: " + method.getNameAsString());
             List<com.github.javaparser.ast.body.Parameter> params = method.getParameters();
+//            Extract parameters from method
             Message request = new Message(
                     Message.Type.GRpcMessage,
                     method.getNameAsString() + "Request",
@@ -124,6 +152,7 @@ public class ProtoGenerator extends AbstractMojo {
                             .collect(Collectors.joining("\n"))
             );
 
+//            Extract return type of method
             Message response = new Message(
                     Message.Type.GRpcMessage,
                     method.getNameAsString() + "Response",
@@ -131,6 +160,7 @@ public class ProtoGenerator extends AbstractMojo {
                     String.format("\t%s %s = 1;", GrpcDataTranslator.translateToGrpcDataType(nm.mapFQN(method.getTypeAsString()), protoObject), "response")
             );
 
+//            Identify data types used in method and added into metaParams map with parameter name
             Map<String, String> metaParams = method.getParameters().stream()
                     .collect(Collectors.toMap(
                             NodeWithSimpleName::getNameAsString,
@@ -146,6 +176,7 @@ public class ProtoGenerator extends AbstractMojo {
             protoObject.getMessages().add(response);
         }
 
+//        Generate proto file if there are any methods
         if (!methods.isEmpty()) {
             String outputDir = project.getBasedir() + "/target/generated-sources/proto";
             generateProtoFiles(protoObject, outputDir);
@@ -153,9 +184,20 @@ public class ProtoGenerator extends AbstractMojo {
         }
     }
 
+    /**
+     * Generates a map of class simple names to their fully qualified names from the imports of a CompilationUnit.
+     *
+     * This method iterates through the imports of a given CompilationUnit and extracts the simple name
+     * and fully qualified name of each imported class. It handles both single class imports and wildcard imports.
+     * For wildcard imports, it currently logs a warning as they are not fully supported.
+     *
+     * @param cu The CompilationUnit to extract imports from.
+     * @return A map where keys are class simple names and values are their corresponding fully qualified names.
+     */
     public static Map<String, String> generateImportMap(CompilationUnit cu) {
         Map<String, String> dtoMap = new HashMap<>();
         cu.getImports().forEach(importDecl -> {
+//            Process each import
             String importStr = importDecl.toString().replace("import ", "");
             importStr = importStr.replace(";", "").trim();
 
@@ -171,9 +213,22 @@ public class ProtoGenerator extends AbstractMojo {
         return dtoMap;
     }
 
+    /**
+     * Generates a .proto file from a {@link ProtoObject}.
+     *
+     * This method takes a {@link ProtoObject} and an output directory, and generates a .proto file
+     * representing the service defined in the {@link ProtoObject}. The generated file includes the
+     * service definition, message definitions, and enum definitions.
+     *
+     * @param protoObject      The {@link ProtoObject} containing the service definition to generate.
+     * @param outputDirectory The directory where the generated .proto file should be written.
+     * @throws IOException       If an I/O error occurs while writing the .proto file.
+     * @throws TemplateException If an error occurs while processing the Freemarker template.
+     */
     private void generateProtoFiles(@NotNull ProtoObject protoObject, @NotNull String outputDirectory)
             throws IOException, TemplateException {
         getLog().info("\tGenerating service proto file: " + protoObject.getServiceName());
+//        Generate proto file using freemarker template
         Map<String, Object> data = new HashMap<>();
         data.put("packageName", protoObject.getPackageName());
         data.put("serviceName", protoObject.getServiceName());
@@ -181,6 +236,7 @@ public class ProtoGenerator extends AbstractMojo {
 
         data.put("imports", protoObject.getImports());
 
+//        Generate service declarations
         List<Map<String, String>> endpoints = new ArrayList<>();
         protoObject.getEndpoints().forEach(endpoint -> {
             endpoints.add(Map.of(
@@ -190,6 +246,7 @@ public class ProtoGenerator extends AbstractMojo {
         });
         data.put("endpoints", endpoints);
 
+//        Generate message declarations for DTOs
         List<Map<String, String>> messages = new ArrayList<>();
         protoObject.getMessages().stream()
                 .filter(message -> message.getType() == Message.Type.GRpcMessage)
@@ -200,6 +257,7 @@ public class ProtoGenerator extends AbstractMojo {
                 });
         data.put("messages", messages);
 
+//        Generate enum declaration
         List<Map<String, String>> enums = new ArrayList<>();
         protoObject.getMessages().stream()
                 .filter(message -> message.getType() == Message.Type.GRpcEnum)
@@ -217,6 +275,7 @@ public class ProtoGenerator extends AbstractMojo {
         StringWriter writer = new StringWriter();
         template.process(data, writer);
 
+//        Write proto file on disk
         try (FileWriter fileWriter = new FileWriter(
                 Paths.get(outputDirectory, protoObject.getServiceName() + ".proto").toString())) {
             fileWriter.write(writer.toString());

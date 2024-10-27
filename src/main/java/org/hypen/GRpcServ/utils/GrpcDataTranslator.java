@@ -35,7 +35,12 @@ public class GrpcDataTranslator {
     /**
      * Translates a Java data type to its equivalent gRPC data type.
      *
+     * This method takes a Java data type as a string and a {@link ProtoObject}.
+     * It handles simple types, collections (List, Map, Set, Collection), and custom classes.
+     * For custom classes, it recursively translates them to gRPC messages or enums.
+     *
      * @param javaDataType The Java data type to translate.
+     * @param protoObject The {@link ProtoObject} representing the current protobuf definition, used for adding imports.
      * @return The equivalent gRPC data type.
      */
     public static String translateToGrpcDataType(String javaDataType, ProtoObject protoObject) {
@@ -94,8 +99,15 @@ public class GrpcDataTranslator {
     /**
      * Translates a Java class or enum type to its equivalent gRPC message or enum definition.
      *
+     * This method takes the fully qualified name of a Java class or enum and a {@link ProtoObject}.
+     * It parses the Java file, extracts necessary information for the `dtoMap`, and then
+     * delegates the translation to either {@link #translateEnumToGrpc} for enums or
+     * {@link #translateClassToGrpcMessage} for classes.
+     *
      * @param javaDataType The fully qualified name of the Java class or enum to translate.
-     * @return The gRPC message or enum definition as a string.
+     * @param protoObject  The {@link ProtoObject} representing the current protobuf definition,
+     *                     used for adding the generated message or enum.
+     * @return The name of the generated gRPC message or enum, or null if an error occurs.
      */
     public static String translateClass(String javaDataType, ProtoObject protoObject) {
         try {
@@ -127,8 +139,17 @@ public class GrpcDataTranslator {
     /**
      * Translates a Java enum to a gRPC enum definition.
      *
-     * @param enumDeclaration The JavaParser EnumDeclaration object.
-     * @return The gRPC enum definition as a string.
+     * This method takes a JavaParser {@link EnumDeclaration} representing a Java enum
+     * and a {@link ProtoObject}. It iterates through the enum constants, assigns them
+     * sequential numerical values starting from 0, and constructs a gRPC enum definition
+     * string with constant names and their corresponding values.
+     *
+     * The generated enum definition is then wrapped in a {@link Message} object and added to the
+     * `messages` list of the provided {@link ProtoObject}.
+     *
+     * @param enumDeclaration The JavaParser {@link EnumDeclaration} representing the Java enum to translate.
+     * @param protoObject     The {@link ProtoObject} representing the current protobuf definition, used for adding the generated enum.
+     * @return The name of the generated gRPC enum.
      */
     private static String translateEnumToGrpc(EnumDeclaration enumDeclaration, ProtoObject protoObject) {
         String fields = IntStream.range(0, enumDeclaration.getEntries().size())
@@ -148,8 +169,17 @@ public class GrpcDataTranslator {
     /**
      * Translates a Java class to a gRPC message definition.
      *
-     * @param classDeclaration The JavaParser ClassOrInterfaceDeclaration object.
-     * @return The gRPC message definition as a string.
+     * This method takes a JavaParser {@link ClassOrInterfaceDeclaration} representing a Java class
+     * and a {@link ProtoObject}. It iterates through the fields of the class, translates each field's
+     * data type to its equivalent gRPC data type using {@link GrpcDataTranslator#translateToGrpcDataType},
+     * and constructs a gRPC message definition string with field names and their corresponding types.
+     *
+     * The generated message definition is then wrapped in a {@link Message} object and added to the
+     * `messages` list of the provided {@link ProtoObject}.
+     *
+     * @param classDeclaration The JavaParser {@link ClassOrInterfaceDeclaration} representing the Java class to translate.
+     * @param protoObject     The {@link ProtoObject} representing the current protobuf definition, used for adding the generated message.
+     * @return The name of the generated gRPC message.
      */
     private static String translateClassToGrpcMessage(ClassOrInterfaceDeclaration classDeclaration, ProtoObject protoObject) {
         NameMapper nm = NameMapper.getInstance();
