@@ -30,6 +30,7 @@ public class ProtobufGenerator extends AbstractMojo {
             String osClassifier = (String) session.getSystemProperties().get("os.detected.classifier");
             getLog().info("OS Classifier:... " + osClassifier);
 
+//            Execute Protobuf plugin
             executeMojo(
                     plugin(
                             groupId("org.xolstice.maven.plugins"),
@@ -45,6 +46,7 @@ public class ProtobufGenerator extends AbstractMojo {
                     executionEnvironment(project, session, pluginManager)
             );
 
+//            Execute GRpc plugin
             executeMojo(
                     plugin(
                             groupId("org.xolstice.maven.plugins"),
