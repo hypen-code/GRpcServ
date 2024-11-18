@@ -5,6 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="Error handling">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ClientGenerator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/annotations/GRpcServClient.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -17,6 +19,7 @@
       <list>
         <option value="Enum" />
         <option value="Class" />
+        <option value="Interface" />
       </list>
     </option>
   </component>
@@ -74,6 +77,14 @@
       </RecentBranches>
     </option>
   </component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="master" />
+        <option value="develop" />
+      </list>
+    </option>
+  </component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/hypen-code/GRpcServ.git&quot;,
@@ -103,6 +114,7 @@
   &quot;keyToString&quot;: {
     &quot;Maven.GRpcServ [clean].executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Shell Script.Build.executor&quot;: &quot;Run&quot;,
     &quot;Shell Script.Test.executor&quot;: &quot;Run&quot;,
     &quot;Shell Script.Unnamed.executor&quot;: &quot;Run&quot;,
@@ -128,10 +140,12 @@
       <recent name="org.hypen.GRpcServ.sample" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="org.hypen.GRpcServ" />
+      <recent name="org.hypen.GRpcServ.annotations" />
       <recent name="org.hypen.GRpcServ.utils" />
     </key>
   </component>
-  <component name="RunManager" selected="Shell Script.Build">
+  <component name="RunManager" selected="Shell Script.Test">
     <configuration name="Build" type="ShConfigurationType">
       <option name="SCRIPT_TEXT" value="rm -rf ~/.m2/repository/org/HypeN &amp;&amp; mvn clean install" />
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
@@ -170,8 +184,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.23726.103" />
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.23726.103" />
+        <option value="bundled-jdk-9823dce3aa75-fdfe4dae3a2d-intellij.indexing.shared.core-IU-243.21565.193" />
+        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-IU-243.21565.193" />
       </set>
     </attachedChunks>
   </component>
@@ -194,6 +208,8 @@
       <workItem from="1729872476595" duration="1783000" />
       <workItem from="1729914402248" duration="9561000" />
       <workItem from="1729955910423" duration="70000" />
+      <workItem from="1731666131011" duration="2678000" />
+      <workItem from="1731947400825" duration="4565000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
