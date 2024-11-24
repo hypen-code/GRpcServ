@@ -20,8 +20,6 @@ import org.apache.maven.shared.utils.StringUtils;
 import org.hypen.GRpcServ.models.ProtoObject;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -83,6 +81,7 @@ public class ClientGenerator extends AbstractMojo {
     }
 
     private void generateClientImpl(String absolutePath, String feignDirectory) throws IOException {
+        String packageLocation = feignDirectory.replace(project.getBasedir() + "/src/main/java/", "");
         StaticJavaParser.getParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(absolutePath));
         String interfaceName = cu.findFirst(ClassOrInterfaceDeclaration.class)
@@ -92,13 +91,14 @@ public class ClientGenerator extends AbstractMojo {
                 m -> m.getAnnotationByName("GRpcServClient").isPresent());
 
         CompilationUnit implCu = new CompilationUnit();
+        implCu.setPackageDeclaration(packageLocation.replace('/', '.'));
         ClassOrInterfaceDeclaration implClass = implCu.addClass(interfaceName+ "GRpcImpl");
         implClass.setAbstract(true);
         ClassOrInterfaceDeclaration feignInterface = cu.getInterfaceByName(interfaceName).get();
         implClass.addImplementedType(new ClassOrInterfaceType(null, feignInterface.getNameAsString()));
 
         for (MethodDeclaration method : methods) {
-            MethodDeclaration newMethod = implClass.addMethod(method.getNameAsString(), method.getType(), method.getModifiers());
+            MethodDeclaration newMethod = implClass.addMethod(method.getNameAsString());
             BlockStmt block = newMethod.createBody();
 
             // Add a default implementation (e.g., return a default value)
@@ -114,8 +114,23 @@ public class ClientGenerator extends AbstractMojo {
         }
 
         // Save the new class to a file
-        Files.write(Paths.get(feignDirectory+ "/" + interfaceName+"GRpcImpl.java"), implCu.toString().getBytes());
+        storeClassFile(implCu, interfaceName + "GRpcImpl.java");
     }
 
+    public void storeClassFile(CompilationUnit cu, String fileName) {
+        File outputDirectory = new File(project.getBasedir() + "/target/generated-sources/protoclient/" +
+                cu.getPackageDeclaration().orElseThrow().getNameAsString() + "/");
 
+        if (!outputDirectory.exists()) {
+            outputDirectory.mkdirs();
+        }
+        File outputFile = new File(outputDirectory, fileName);
+
+        try (FileWriter fileWriter = new FileWriter(outputFile)) {
+            fileWriter.write(cu.toString());
+            getLog().info("File saved to: " + outputFile.getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

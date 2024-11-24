@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="Error handling">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ClientGenerator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/annotations/GRpcServClient.java" afterDir="false" />
+    <list default="true" id="207a1182-c38e-4cd4-867b-d45650140b08" name="Changes" comment="ClientGenerator dev">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ClientGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hypen/GRpcServ/ClientGenerator.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,7 +25,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="develop" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -60,6 +59,10 @@
             <RecentBranchesForRepo>
               <option name="branches">
                 <list>
+                  <RecentBranch>
+                    <option name="branchName" value="feature/client-dev" />
+                    <option name="lastUsedInstant" value="1731954560" />
+                  </RecentBranch>
                   <RecentBranch>
                     <option name="branchName" value="develop" />
                     <option name="lastUsedInstant" value="1729933169" />
@@ -118,7 +121,7 @@
     &quot;Shell Script.Build.executor&quot;: &quot;Run&quot;,
     &quot;Shell Script.Test.executor&quot;: &quot;Run&quot;,
     &quot;Shell Script.Unnamed.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/client-dev&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;/home/harsha/IdeaProjects/GRpcServ/GRpcServ/src/main/java/org/hypen/GRpcServ&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -162,7 +165,7 @@
       <method v="2" />
     </configuration>
     <configuration name="Test" type="ShConfigurationType" focusToolWindowBeforeRun="true">
-      <option name="SCRIPT_TEXT" value="mvn clean install &amp;&amp; mvn -DsourceDirectories=&quot;src/main/java/org/hypen/GRpcServ/sample&quot; org.HypeN.maven:GRpcServ:proto-gen org.HypeN.maven:GRpcServ:protobuf-gen org.HypeN.maven:GRpcServ:svc-gen" />
+      <option name="SCRIPT_TEXT" value="mvn clean install &amp;&amp; mvn -DsourceDirectories=&quot;src/main/java/org/hypen/GRpcServ/sample&quot; -DfeignDirectories=&quot;src/main/java/org/hypen/GRpcServ/sample/feign&quot; org.HypeN.maven:GRpcServ:proto-gen org.HypeN.maven:GRpcServ:protobuf-gen org.HypeN.maven:GRpcServ:svc-gen org.HypeN.maven:GRpcServ:client-gen" />
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
       <option name="SCRIPT_PATH" value="" />
       <option name="SCRIPT_OPTIONS" value="" />
@@ -209,7 +212,9 @@
       <workItem from="1729914402248" duration="9561000" />
       <workItem from="1729955910423" duration="70000" />
       <workItem from="1731666131011" duration="2678000" />
-      <workItem from="1731947400825" duration="4565000" />
+      <workItem from="1731947400825" duration="4929000" />
+      <workItem from="1732433115591" duration="81000" />
+      <workItem from="1732433207975" duration="3186000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -379,7 +384,15 @@
       <option name="project" value="LOCAL" />
       <updated>1729941102524</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="ClientGenerator dev">
+      <option name="closed" value="true" />
+      <created>1731954591460</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1731954591460</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -408,6 +421,7 @@
     <MESSAGE value="Response generating" />
     <MESSAGE value="Response generating for list of DTOs" />
     <MESSAGE value="Error handling" />
-    <option name="LAST_COMMIT_MESSAGE" value="Error handling" />
+    <MESSAGE value="ClientGenerator dev" />
+    <option name="LAST_COMMIT_MESSAGE" value="ClientGenerator dev" />
   </component>
 </project>
