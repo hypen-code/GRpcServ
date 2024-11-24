@@ -8,5 +8,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.METHOD)
 public @interface GRpcServClient {
-    String value() default "Default Value";
+    String host() default "localhost";
+    int port() default 6565;
 }

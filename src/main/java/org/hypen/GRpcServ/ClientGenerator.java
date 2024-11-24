@@ -3,10 +3,12 @@ package org.hypen.GRpcServ;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import org.apache.maven.plugin.AbstractMojo;
@@ -22,7 +24,9 @@ import org.hypen.GRpcServ.models.ProtoObject;
 import java.io.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Mojo(name = "client-gen", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class ClientGenerator extends AbstractMojo {
@@ -99,22 +103,79 @@ public class ClientGenerator extends AbstractMojo {
 
         for (MethodDeclaration method : methods) {
             MethodDeclaration newMethod = implClass.addMethod(method.getNameAsString());
-            BlockStmt block = newMethod.createBody();
+            newMethod.addAnnotation("Override");
+            newMethod.setPublic(true);
+            newMethod.setType(method.getType());
+            newMethod.setParameters(method.getParameters());
 
-            // Add a default implementation (e.g., return a default value)
-            ReturnStmt returnStmt = new ReturnStmt();
-            if (method.getType().isVoidType()) {
-                returnStmt.setExpression(null);
-            } else if (method.getType().isPrimitiveType()) {
-                returnStmt.setExpression(new NameExpr(method.getType().asPrimitiveType().asString() + "Value"));
-            } else {
-                returnStmt.setExpression(new NameExpr("null"));
-            }
-            block.addStatement(returnStmt);
+            BlockStmt block = newMethod.createBody();
+            generateMethodBody(block, method);
         }
 
         // Save the new class to a file
         storeClassFile(implCu, interfaceName + "GRpcImpl.java");
+    }
+
+    private static void generateMethodBody(BlockStmt block, MethodDeclaration method) {
+//        Get annotation's attributes as pairs
+        NormalAnnotationExpr normalAnnotationExpr = method.getAnnotationByName("GRpcServClient")
+                .orElseThrow().asNormalAnnotationExpr();
+        Map<SimpleName, Expression> pairs = normalAnnotationExpr.getPairs().stream()
+                .collect(Collectors.toMap(MemberValuePair::getName, MemberValuePair::getValue));
+
+        ExpressionStmt channelDecl = new ExpressionStmt(
+                new AssignExpr( new NameExpr("channel"), new MethodCallExpr( new MethodCallExpr( new MethodCallExpr(
+                        new NameExpr("ManagedChannelBuilder"), "forAddress",
+                        new NodeList<>(
+                                new StringLiteralExpr(pairs.get(new SimpleName("host")).asStringLiteralExpr().getValue()),
+                                new IntegerLiteralExpr(pairs.get(new SimpleName("port")).asIntegerLiteralExpr().getValue())
+                        ) ), "usePlaintext" ), "build" ),
+                AssignExpr.Operator.ASSIGN));
+        channelDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, "ManagedChannel"), "channel"));
+        block.addStatement(channelDecl);
+
+        ExpressionStmt stubDecl = new ExpressionStmt( new AssignExpr(
+                new NameExpr("stub"), new MethodCallExpr(
+                        new NameExpr("DtosGrpc"), "newBlockingStub",
+                        new NodeList<>(new NameExpr("channel"))
+                ), AssignExpr.Operator.ASSIGN));
+        stubDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, "DtosGrpc.DtosBlockingStub"), "stub"));
+        block.addStatement(stubDecl);
+
+        ExpressionStmt requestDecl = new ExpressionStmt( new AssignExpr(
+                new NameExpr("request"), new MethodCallExpr(
+                        new MethodCallExpr(
+                                new MethodCallExpr(
+                                        new NameExpr("inputRequest"),
+                                        "newBuilder"
+                                ), "setStu",
+                                new NodeList<>(new StringLiteralExpr("student1"))
+                        ), "build"
+                ), AssignExpr.Operator.ASSIGN));
+        requestDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, "inputRequest"), "request"));
+        block.addStatement(requestDecl);
+
+        ExpressionStmt responseDecl = new ExpressionStmt( new AssignExpr(
+                        new NameExpr("response"), new MethodCallExpr(
+                                new NameExpr("stub"), "input",
+                                new NodeList<>(new NameExpr("request"))
+                        ), AssignExpr.Operator.ASSIGN));
+        responseDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, "inputResponse"), "response"));
+        block.addStatement(responseDecl);
+
+        ExpressionStmt shutdownStmt = new ExpressionStmt(new MethodCallExpr(new NameExpr("channel"), "shutdown"));
+        block.addStatement(shutdownStmt);
+
+        // Add a default implementation (e.g., return a default value)
+        ReturnStmt returnStmt = new ReturnStmt();
+        if (method.getType().isVoidType()) {
+            returnStmt.setExpression(null);
+        } else if (method.getType().isPrimitiveType()) {
+            returnStmt.setExpression(new NameExpr(method.getType().asPrimitiveType().asString() + "Value"));
+        } else {
+            returnStmt.setExpression(new NameExpr("null"));
+        }
+        block.addStatement(returnStmt);
     }
 
     public void storeClassFile(CompilationUnit cu, String fileName) {
