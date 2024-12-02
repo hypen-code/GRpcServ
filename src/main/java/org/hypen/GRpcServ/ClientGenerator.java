@@ -19,13 +19,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
+import org.hypen.GRpcServ.models.Endpoint;
 import org.hypen.GRpcServ.models.ProtoObject;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Mojo(name = "client-gen", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
@@ -38,6 +36,7 @@ public class ClientGenerator extends AbstractMojo {
     private String feignDirectories;
 
     List<ProtoObject> protoObjects;
+    ProtoObject currentProto;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -111,17 +110,36 @@ public class ClientGenerator extends AbstractMojo {
             BlockStmt block = newMethod.createBody();
             generateMethodBody(block, method);
         }
+        makeImports(implCu);
 
         // Save the new class to a file
         storeClassFile(implCu, interfaceName + "GRpcImpl.java");
     }
 
-    private static void generateMethodBody(BlockStmt block, MethodDeclaration method) {
+    private void makeImports(CompilationUnit implCu) {
+        implCu.addImport("io.grpc.ManagedChannel");
+        implCu.addImport("io.grpc.ManagedChannelBuilder");
+
+        if (currentProto != null)
+            implCu.addImport(currentProto.getPackageName()+"."+currentProto.getServiceName()+"Gen.*");
+    }
+
+    private void generateMethodBody(BlockStmt block, MethodDeclaration method) {
 //        Get annotation's attributes as pairs
         NormalAnnotationExpr normalAnnotationExpr = method.getAnnotationByName("GRpcServClient")
                 .orElseThrow().asNormalAnnotationExpr();
         Map<SimpleName, Expression> pairs = normalAnnotationExpr.getPairs().stream()
                 .collect(Collectors.toMap(MemberValuePair::getName, MemberValuePair::getValue));
+
+        ProtoObject proto = protoObjects.stream()
+                .filter(e -> e.getServiceName().equals(pairs.get(new SimpleName("service")).asStringLiteralExpr().getValue()))
+                .findFirst().orElseThrow();
+        currentProto = proto;
+
+        String endpointName = pairs.get(new SimpleName("endpoint")).asStringLiteralExpr().getValue();
+        Endpoint endpoint = proto.getEndpoints().stream()
+                .filter(e -> e.getName().equals(endpointName.isBlank() ? method.getNameAsString() : endpointName))
+                .findFirst().orElseThrow();
 
         ExpressionStmt channelDecl = new ExpressionStmt(
                 new AssignExpr( new NameExpr("channel"), new MethodCallExpr( new MethodCallExpr( new MethodCallExpr(
@@ -136,7 +154,7 @@ public class ClientGenerator extends AbstractMojo {
 
         ExpressionStmt stubDecl = new ExpressionStmt( new AssignExpr(
                 new NameExpr("stub"), new MethodCallExpr(
-                        new NameExpr("DtosGrpc"), "newBlockingStub",
+                        new NameExpr(proto.getServiceName()+"Grpc"), "newBlockingStub",
                         new NodeList<>(new NameExpr("channel"))
                 ), AssignExpr.Operator.ASSIGN));
         stubDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, "DtosGrpc.DtosBlockingStub"), "stub"));
@@ -146,21 +164,21 @@ public class ClientGenerator extends AbstractMojo {
                 new NameExpr("request"), new MethodCallExpr(
                         new MethodCallExpr(
                                 new MethodCallExpr(
-                                        new NameExpr("inputRequest"),
+                                        new NameExpr(endpoint.getRequest().getName()),
                                         "newBuilder"
                                 ), "setStu",
                                 new NodeList<>(new StringLiteralExpr("student1"))
                         ), "build"
                 ), AssignExpr.Operator.ASSIGN));
-        requestDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, "inputRequest"), "request"));
+        requestDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, endpoint.getRequest().getName()), "request"));
         block.addStatement(requestDecl);
 
         ExpressionStmt responseDecl = new ExpressionStmt( new AssignExpr(
                         new NameExpr("response"), new MethodCallExpr(
-                                new NameExpr("stub"), "input",
+                                new NameExpr("stub"), endpoint.getName(),
                                 new NodeList<>(new NameExpr("request"))
                         ), AssignExpr.Operator.ASSIGN));
-        responseDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, "inputResponse"), "response"));
+        responseDecl.getExpression().asAssignExpr().setTarget(new VariableDeclarationExpr(new ClassOrInterfaceType(null, endpoint.getResponse().getName()), "response"));
         block.addStatement(responseDecl);
 
         ExpressionStmt shutdownStmt = new ExpressionStmt(new MethodCallExpr(new NameExpr("channel"), "shutdown"));

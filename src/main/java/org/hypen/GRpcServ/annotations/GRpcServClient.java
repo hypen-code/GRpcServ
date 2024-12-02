@@ -10,4 +10,6 @@ import java.lang.annotation.Target;
 public @interface GRpcServClient {
     String host() default "localhost";
     int port() default 6565;
+    String service() default "";
+    String endpoint() default "";
 }

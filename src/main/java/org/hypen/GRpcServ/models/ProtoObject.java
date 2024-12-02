@@ -2,12 +2,14 @@ package org.hypen.GRpcServ.models;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.*;
 
 @Getter
 @Setter
+@ToString
 public class ProtoObject implements Serializable {
     String packageName;
     Boolean javaMultipleFiles = true;
