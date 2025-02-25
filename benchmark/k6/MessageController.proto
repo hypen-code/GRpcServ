@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+
+package com.zero_touch.benchmark.controllers.MessageControllerGen;
+
+option java_multiple_files = true;
+option java_package = "com.zero_touch.benchmark.controllers.MessageControllerGen";
+option java_outer_classname = "MessageControllerOuterClass";
+
+service MessageController {
+    rpc getMessage (getMessageRequest) returns (getMessageResponse){}
+}
+
+message ResponseDtoDto {
+	string response = 1;
+	int64 length = 2;
+}
+message RequestDtoDto {
+	string text = 1;
+	int64 multiplier = 2;
+}
+message getMessageRequest {
+	RequestDtoDto message = 1;
+}
+message getMessageResponse {
+	ResponseDtoDto response = 1;
+}
+

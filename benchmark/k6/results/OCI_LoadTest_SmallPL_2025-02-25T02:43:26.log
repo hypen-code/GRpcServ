@@ -1,0 +1,104 @@
+Execution Setup
+{
+  "testName": "OCI_LoadTest_SmallPL",
+  "host": "129.150.50.242",
+  "options": {
+    "insecureSkipTLSVerify": true,
+    "stages": [
+      {
+        "duration": "2m",
+        "target": 350
+      },
+      {
+        "duration": "1m",
+        "target": 350
+      },
+      {
+        "duration": "2m",
+        "target": 0
+      }
+    ]
+  },
+  "multiplier": 1,
+  "text": "In an era defined by rapid innovation and global interconnectivity, humanity finds itself at the crossroads of technology and tradition. Modern advancements in computing, medicine, and environmental science have redefined possibilities, enabling breakthroughs once thought impossible. As digital networks weave communities together, ethical debates and sustainable practices emerge as critical priorities. Scholars, engineers, and policymakers collaborate to harness artificial intelligence and renewable energy, ensuring progress benefits society at large. Cultural heritage and scientific discovery now coexist in a delicate balance, challenging us to honor the past while forging new paths. Every discovery, from quantum computing to gene editing, invites both excitement and caution, urging responsible innovation and shared wisdom for a brighter future. With each milestone, the narrative of progress deepens, inspiring a commitment to knowledge, empathy, and perseverance that transcends borders and generations. This comprehensive journey through scientific and cultural evolution illustrates how collective effort and visionary thinking drive society forward. The integration of diverse perspectives fosters innovation, while respect for natural systems ensures that progress remains sustainable and inclusive. As challenges arise and new opportunities emerge, the interplay between technology and human values continues to shape our shared destiny, reminding us that every step forward is a testament to our capacity for adaptation and hope.",
+  "sleep": 0
+}
+
+----------------------------------------
+
+Running gRPC Auto Migration via Framework...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: grpc-auto-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 350 max VUs, 5m30s max duration (incl. graceful stop):
+              * default: Up to 350 looping VUs for 5m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is OK
+     checks...............: 100.00% 22548 out of 22548
+     data_received........: 39 MB   131 kB/s
+     data_sent............: 42 MB   140 kB/s
+     grpc_req_duration....: avg=298.27ms min=197.46ms med=271.49ms max=4.27s p(90)=382.69ms p(95)=449.72ms
+     iteration_duration...: avg=2.85s    min=591.37ms med=899.44ms max=1m0s  p(90)=5.92s    p(95)=12.29s  
+     iterations...........: 22554   75.008465/s
+     vus..................: 1       min=1              max=350
+     vus_max..............: 350     min=350            max=350
+----------------------------------------
+
+Running gRPC Manual Migration...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: grpc-manual-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 350 max VUs, 5m30s max duration (incl. graceful stop):
+              * default: Up to 350 looping VUs for 5m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is OK
+     checks...............: 100.00% 21677 out of 21677
+     data_received........: 38 MB   126 kB/s
+     data_sent............: 40 MB   134 kB/s
+     grpc_req_duration....: avg=320.2ms min=199.21ms med=293.1ms max=3.38s p(90)=419.96ms p(95)=510.47ms
+     iteration_duration...: avg=2.97s   min=604.49ms med=968.8ms max=1m0s  p(90)=6.04s    p(95)=12.38s  
+     iterations...........: 21680   72.177705/s
+     vus..................: 2       min=2              max=350
+     vus_max..............: 350     min=350            max=350
+----------------------------------------
+
+Running HTTP REST Existing API...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: http-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 350 max VUs, 5m30s max duration (incl. graceful stop):
+              * default: Up to 350 looping VUs for 5m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is 200
+     checks.........................: 100.00% 219607 out of 219607
+     data_received..................: 375 MB  1.2 MB/s
+     data_sent......................: 379 MB  1.3 MB/s
+     http_req_blocked...............: avg=2.99ms   min=483ns    med=2.24µs   max=1.35s  p(90)=3.13µs   p(95)=3.78µs  
+     http_req_connecting............: avg=2.99ms   min=0s       med=0s       max=1.35s  p(90)=0s       p(95)=0s      
+     http_req_duration..............: avg=284.24ms min=190.19ms med=272.5ms  max=2.91s  p(90)=357.7ms  p(95)=384.4ms 
+       { expected_response:true }...: avg=284.24ms min=190.19ms med=272.5ms  max=2.91s  p(90)=357.7ms  p(95)=384.4ms 
+     http_req_failed................: 0.00%   0 out of 219607
+     http_req_receiving.............: avg=10.58ms  min=6.12µs   med=8.09ms   max=1.54s  p(90)=21.31ms  p(95)=29.11ms 
+     http_req_sending...............: avg=9.96µs   min=2.17µs   med=8.8µs    max=3.81ms p(90)=13.38µs  p(95)=18.01µs 
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s     p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=273.65ms min=190.14ms med=261.57ms max=2.91s  p(90)=345.49ms p(95)=371.83ms
+     http_reqs......................: 219607  731.75547/s
+     iteration_duration.............: avg=287.34ms min=190.32ms med=273.54ms max=2.91s  p(90)=361.9ms  p(95)=393.58ms
+     iterations.....................: 219607  731.75547/s
+     vus............................: 1       min=1                max=350
+     vus_max........................: 350     min=350              max=350
+----------------------------------------
+
+All tests completed. See 'results/OCI_LoadTest_SmallPL_2025-02-25T02:43:26.log' for details.

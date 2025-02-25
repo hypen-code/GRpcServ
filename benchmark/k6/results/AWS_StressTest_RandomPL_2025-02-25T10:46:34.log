@@ -1,0 +1,147 @@
+Execution Setup
+{
+  "testName": "AWS_StressTest_RandomPL",
+  "host": "13.58.248.108",
+  "options": {
+    "insecureSkipTLSVerify": true,
+    "stages": [
+      {
+        "duration": "30s",
+        "target": 100
+      },
+      {
+        "duration": "1m",
+        "target": 100
+      },
+      {
+        "duration": "30s",
+        "target": 300
+      },
+      {
+        "duration": "1m",
+        "target": 300
+      },
+      {
+        "duration": "30s",
+        "target": 500
+      },
+      {
+        "duration": "3m",
+        "target": 500
+      },
+      {
+        "duration": "30s",
+        "target": 700
+      },
+      {
+        "duration": "1m",
+        "target": 700
+      },
+      {
+        "duration": "20s",
+        "target": 0
+      }
+    ]
+  },
+  "multiplier": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    15,
+    20,
+    30,
+    40,
+    50,
+    70,
+    95
+  ],
+  "text": "In an era defined by rapid innovation and global interconnectivity, humanity finds itself at the crossroads of technology and tradition. Modern advancements in computing, medicine, and environmental science have redefined possibilities, enabling breakthroughs once thought impossible. As digital networks weave communities together, ethical debates and sustainable practices emerge as critical priorities. Scholars, engineers, and policymakers collaborate to harness artificial intelligence and renewable energy, ensuring progress benefits society at large. Cultural heritage and scientific discovery now coexist in a delicate balance, challenging us to honor the past while forging new paths. Every discovery, from quantum computing to gene editing, invites both excitement and caution, urging responsible innovation and shared wisdom for a brighter future. With each milestone, the narrative of progress deepens, inspiring a commitment to knowledge, empathy, and perseverance that transcends borders and generations. This comprehensive journey through scientific and cultural evolution illustrates how collective effort and visionary thinking drive society forward. The integration of diverse perspectives fosters innovation, while respect for natural systems ensures that progress remains sustainable and inclusive. As challenges arise and new opportunities emerge, the interplay between technology and human values continues to shape our shared destiny, reminding us that every step forward is a testament to our capacity for adaptation and hope.",
+  "sleep": 1
+}
+
+----------------------------------------
+
+Running gRPC Auto Migration via Framework...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: grpc-auto-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 700 max VUs, 8m50s max duration (incl. graceful stop):
+              * default: Up to 700 looping VUs for 8m20s over 9 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is OK
+     checks...............: 100.00% 31522 out of 31522
+     data_received........: 1.1 GB  2.2 MB/s
+     data_sent............: 60 MB   116 kB/s
+     grpc_req_duration....: avg=2.14s min=264.73ms med=1.23s max=43.76s p(90)=4.43s  p(95)=7.52s 
+     iteration_duration...: avg=6.48s min=1.8s     med=4.44s max=1m0s   p(90)=13.09s p(95)=22.82s
+     iterations...........: 31540   61.133961/s
+     vus..................: 1       min=1              max=700
+     vus_max..............: 700     min=700            max=700
+----------------------------------------
+
+Running gRPC Manual Migration...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: grpc-manual-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 700 max VUs, 8m50s max duration (incl. graceful stop):
+              * default: Up to 700 looping VUs for 8m20s over 9 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✗ status is OK
+      ↳  99% — ✓ 32833 / ✗ 1
+     checks...............: 99.99% 32833 out of 32834
+     data_received........: 1.2 GB 2.3 MB/s
+     data_sent............: 62 MB  118 kB/s
+     grpc_req_duration....: avg=1.62s min=262.79ms med=1.14s max=29.53s p(90)=3.05s  p(95)=4.14s
+     iteration_duration...: avg=6.2s  min=1.79s    med=4.08s max=1m0s   p(90)=11.23s p(95)=23.6s
+     iterations...........: 32855  62.290552/s
+     vus..................: 1      min=1              max=700
+     vus_max..............: 700    min=700            max=700
+----------------------------------------
+
+Running HTTP REST Existing API...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: http-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 700 max VUs, 8m50s max duration (incl. graceful stop):
+              * default: Up to 700 looping VUs for 8m20s over 9 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✗ status is 200
+      ↳  99% — ✓ 29460 / ✗ 66
+     checks.........................: 99.77% 29460 out of 29526
+     data_received..................: 1.1 GB 2.1 MB/s
+     data_sent......................: 51 MB  100 kB/s
+     http_req_blocked...............: avg=32.38ms min=862ns    med=3.46µs  max=4.51s    p(90)=5.26µs  p(95)=7.04µs 
+     http_req_connecting............: avg=32.37ms min=0s       med=0s      max=4.51s    p(90)=0s      p(95)=0s     
+     http_req_duration..............: avg=5.88s   min=278.35ms med=2.38s   max=1m0s     p(90)=15.53s  p(95)=22.8s  
+       { expected_response:true }...: avg=5.76s   min=278.35ms med=2.38s   max=59.72s   p(90)=15.29s  p(95)=22.4s  
+     http_req_failed................: 0.22%  66 out of 29526
+     http_req_receiving.............: avg=4.33s   min=0s       med=1.18s   max=59.41s   p(90)=13.18s  p(95)=20.29s 
+     http_req_sending...............: avg=13.44µs min=2.75µs   med=11.33µs max=547.08µs p(90)=19.53µs p(95)=23.52µs
+     http_req_tls_handshaking.......: avg=0s      min=0s       med=0s      max=0s       p(90)=0s      p(95)=0s     
+     http_req_waiting...............: avg=1.54s   min=277.02ms med=1.22s   max=43.93s   p(90)=3.88s   p(95)=4.36s  
+     http_reqs......................: 29526  58.031585/s
+     iteration_duration.............: avg=6.91s   min=1.27s    med=3.41s   max=1m1s     p(90)=16.58s  p(95)=23.84s 
+     iterations.....................: 29526  58.031585/s
+     vus............................: 1      min=1              max=700
+     vus_max........................: 700    min=700            max=700
+----------------------------------------
+
+All tests completed. See 'results/AWS_StressTest_RandomPL_2025-02-25T10:46:34.log' for details.

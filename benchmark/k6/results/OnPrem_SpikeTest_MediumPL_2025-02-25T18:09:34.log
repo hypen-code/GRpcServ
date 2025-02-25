@@ -1,0 +1,129 @@
+Execution Setup
+{
+  "testName": "OnPrem_SpikeTest_MediumPL",
+  "host": "192.168.1.182",
+  "options": {
+    "insecureSkipTLSVerify": true,
+    "stages": [
+      {
+        "duration": "10s",
+        "target": 50
+      },
+      {
+        "duration": "1m",
+        "target": 50
+      },
+      {
+        "duration": "10s",
+        "target": 1000
+      },
+      {
+        "duration": "20s",
+        "target": 1000
+      },
+      {
+        "duration": "10s",
+        "target": 50
+      },
+      {
+        "duration": "20s",
+        "target": 50
+      },
+      {
+        "duration": "10s",
+        "target": 1000
+      },
+      {
+        "duration": "20s",
+        "target": 1000
+      },
+      {
+        "duration": "10s",
+        "target": 0
+      }
+    ]
+  },
+  "multiplier": 10,
+  "text": "In an era defined by rapid innovation and global interconnectivity, humanity finds itself at the crossroads of technology and tradition. Modern advancements in computing, medicine, and environmental science have redefined possibilities, enabling breakthroughs once thought impossible. As digital networks weave communities together, ethical debates and sustainable practices emerge as critical priorities. Scholars, engineers, and policymakers collaborate to harness artificial intelligence and renewable energy, ensuring progress benefits society at large. Cultural heritage and scientific discovery now coexist in a delicate balance, challenging us to honor the past while forging new paths. Every discovery, from quantum computing to gene editing, invites both excitement and caution, urging responsible innovation and shared wisdom for a brighter future. With each milestone, the narrative of progress deepens, inspiring a commitment to knowledge, empathy, and perseverance that transcends borders and generations. This comprehensive journey through scientific and cultural evolution illustrates how collective effort and visionary thinking drive society forward. The integration of diverse perspectives fosters innovation, while respect for natural systems ensures that progress remains sustainable and inclusive. As challenges arise and new opportunities emerge, the interplay between technology and human values continues to shape our shared destiny, reminding us that every step forward is a testament to our capacity for adaptation and hope.",
+  "sleep": 1
+}
+
+----------------------------------------
+
+Running gRPC Auto Migration via Framework...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: grpc-auto-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 1000 max VUs, 3m20s max duration (incl. graceful stop):
+              * default: Up to 1000 looping VUs for 2m50s over 9 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is OK
+     checks...............: 100.00% 12236 out of 12236
+     data_received........: 192 MB  1.0 MB/s
+     data_sent............: 23 MB   123 kB/s
+     grpc_req_duration....: avg=3.35s min=9.55ms med=1.43s max=47.15s p(90)=9.29s  p(95)=13.05s
+     iteration_duration...: avg=5.93s min=1.01s  med=4.22s max=49.82s p(90)=13.66s p(95)=17.79s
+     iterations...........: 12236   66.116191/s
+     vus..................: 1       min=1              max=1000
+     vus_max..............: 1000    min=1000           max=1000
+----------------------------------------
+
+Running gRPC Manual Migration...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: grpc-manual-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 1000 max VUs, 3m20s max duration (incl. graceful stop):
+              * default: Up to 1000 looping VUs for 2m50s over 9 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is OK
+     checks...............: 100.00% 11980 out of 11980
+     data_received........: 188 MB  946 kB/s
+     data_sent............: 22 MB   112 kB/s
+     grpc_req_duration....: avg=3.51s min=10.9ms med=1.59s max=50.36s p(90)=9.58s  p(95)=13.96s
+     iteration_duration...: avg=6.12s min=1.02s  med=4.44s max=54.87s p(90)=13.76s p(95)=18.9s 
+     iterations...........: 11980   60.282412/s
+     vus..................: 1       min=1              max=1000
+     vus_max..............: 1000    min=1000           max=1000
+----------------------------------------
+
+Running HTTP REST Existing API...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: http-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 1000 max VUs, 3m20s max duration (incl. graceful stop):
+              * default: Up to 1000 looping VUs for 2m50s over 9 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✗ status is 200
+      ↳  99% — ✓ 13590 / ✗ 27
+     checks.........................: 99.80% 13590 out of 13617
+     data_received..................: 213 MB 1.1 MB/s
+     data_sent......................: 24 MB  125 kB/s
+     http_req_blocked...............: avg=98.33ms min=742ns   med=3.35µs   max=6.13s    p(90)=7.04µs  p(95)=658.32ms
+     http_req_connecting............: avg=98.33ms min=0s      med=0s       max=6.13s    p(90)=0s      p(95)=658.28ms
+     http_req_duration..............: avg=4.1s    min=12.78ms med=1.86s    max=53.1s    p(90)=10.93s  p(95)=15.26s  
+       { expected_response:true }...: avg=4.11s   min=12.78ms med=1.86s    max=53.1s    p(90)=10.94s  p(95)=15.26s  
+     http_req_failed................: 0.19%  27 out of 13617
+     http_req_receiving.............: avg=2.08s   min=0s      med=814.67ms max=51.79s   p(90)=6.11s   p(95)=9.38s   
+     http_req_sending...............: avg=13.98µs min=2.43µs  med=10.79µs  max=459.58µs p(90)=22.07µs p(95)=30.95µs 
+     http_req_tls_handshaking.......: avg=0s      min=0s      med=0s       max=0s       p(90)=0s      p(95)=0s      
+     http_req_waiting...............: avg=2.02s   min=5.27ms  med=930.47ms max=44.83s   p(90)=5.26s   p(95)=7.47s   
+     http_reqs......................: 13617  72.419606/s
+     iteration_duration.............: avg=5.2s    min=1.01s   med=2.88s    max=54.1s    p(90)=12.15s  p(95)=16.63s  
+     iterations.....................: 13616  72.414288/s
+     vus............................: 1      min=1              max=1000
+     vus_max........................: 1000   min=1000           max=1000
+----------------------------------------
+
+All tests completed. See 'results/OnPrem_SpikeTest_MediumPL_2025-02-25T18:09:34.log' for details.

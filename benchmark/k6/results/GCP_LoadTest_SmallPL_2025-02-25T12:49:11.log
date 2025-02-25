@@ -1,0 +1,104 @@
+Execution Setup
+{
+  "testName": "GCP_LoadTest_SmallPL",
+  "host": "https://benchmark-app-257241881095.us-central1.run.app",
+  "options": {
+    "insecureSkipTLSVerify": false,
+    "stages": [
+      {
+        "duration": "2m",
+        "target": 350
+      },
+      {
+        "duration": "1m",
+        "target": 350
+      },
+      {
+        "duration": "2m",
+        "target": 0
+      }
+    ]
+  },
+  "multiplier": 1,
+  "text": "In an era defined by rapid innovation and global interconnectivity, humanity finds itself at the crossroads of technology and tradition. Modern advancements in computing, medicine, and environmental science have redefined possibilities, enabling breakthroughs once thought impossible. As digital networks weave communities together, ethical debates and sustainable practices emerge as critical priorities. Scholars, engineers, and policymakers collaborate to harness artificial intelligence and renewable energy, ensuring progress benefits society at large. Cultural heritage and scientific discovery now coexist in a delicate balance, challenging us to honor the past while forging new paths. Every discovery, from quantum computing to gene editing, invites both excitement and caution, urging responsible innovation and shared wisdom for a brighter future. With each milestone, the narrative of progress deepens, inspiring a commitment to knowledge, empathy, and perseverance that transcends borders and generations. This comprehensive journey through scientific and cultural evolution illustrates how collective effort and visionary thinking drive society forward. The integration of diverse perspectives fosters innovation, while respect for natural systems ensures that progress remains sustainable and inclusive. As challenges arise and new opportunities emerge, the interplay between technology and human values continues to shape our shared destiny, reminding us that every step forward is a testament to our capacity for adaptation and hope.",
+  "sleep": 0
+}
+
+----------------------------------------
+
+Running gRPC Auto Migration via Framework...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: grpc-auto-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 350 max VUs, 5m30s max duration (incl. graceful stop):
+              * default: Up to 350 looping VUs for 5m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is OK
+     checks...............: 100.00% 19678 out of 19678
+     data_received........: 144 MB  481 kB/s
+     data_sent............: 47 MB   158 kB/s
+     grpc_req_duration....: avg=305.27ms min=258.07ms med=291.7ms  max=1.19s p(90)=348.6ms p(95)=386.22ms
+     iteration_duration...: avg=3.28s    min=459.39ms med=625.25ms max=1m0s  p(90)=5.83s   p(95)=20.21s  
+     iterations...........: 19729   65.739207/s
+     vus..................: 1       min=1              max=350
+     vus_max..............: 350     min=350            max=350
+----------------------------------------
+
+Running gRPC Manual Migration...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: grpc-manual-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 350 max VUs, 5m30s max duration (incl. graceful stop):
+              * default: Up to 350 looping VUs for 5m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is OK
+     checks...............: 100.00% 19577 out of 19577
+     data_received........: 143 MB  476 kB/s
+     data_sent............: 47 MB   156 kB/s
+     grpc_req_duration....: avg=310.79ms min=255.2ms  med=300.01ms max=1.6s p(90)=349.61ms p(95)=376.36ms
+     iteration_duration...: avg=3.29s    min=484.25ms med=652.3ms  max=1m0s p(90)=5.95s    p(95)=20.27s  
+     iterations...........: 19631   65.309794/s
+     vus..................: 2       min=2              max=350
+     vus_max..............: 350     min=350            max=350
+----------------------------------------
+
+Running HTTP REST Existing API...
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: http-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 350 max VUs, 5m30s max duration (incl. graceful stop):
+              * default: Up to 350 looping VUs for 5m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+     ✓ status is 200
+     checks.........................: 100.00% 129134 out of 129134
+     data_received..................: 231 MB  769 kB/s
+     data_sent......................: 219 MB  730 kB/s
+     http_req_blocked...............: avg=1.02ms   min=68ns     med=268ns    max=1.41s    p(90)=338ns    p(95)=363ns   
+     http_req_connecting............: avg=497.41µs min=0s       med=0s       max=760.6ms  p(90)=0s       p(95)=0s      
+     http_req_duration..............: avg=487.75ms min=251.55ms med=442.3ms  max=8s       p(90)=713.05ms p(95)=792.93ms
+       { expected_response:true }...: avg=487.75ms min=251.55ms med=442.3ms  max=8s       p(90)=713.05ms p(95)=792.93ms
+     http_req_failed................: 0.00%   0 out of 129134
+     http_req_receiving.............: avg=9.27ms   min=7.74µs   med=1.93ms   max=2.83s    p(90)=22.36ms  p(95)=30.42ms 
+     http_req_sending...............: avg=28.14µs  min=6.38µs   med=26.51µs  max=982.54µs p(90)=40.79µs  p(95)=48.36µs 
+     http_req_tls_handshaking.......: avg=524.65µs min=0s       med=0s       max=755.22ms p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=478.44ms min=251.43ms med=434.32ms max=7.99s    p(90)=700.92ms p(95)=777.45ms
+     http_reqs......................: 129134  430.311679/s
+     iteration_duration.............: avg=488.87ms min=259.39ms med=443.15ms max=8.29s    p(90)=714.32ms p(95)=795.22ms
+     iterations.....................: 129134  430.311679/s
+     vus............................: 1       min=1                max=350
+     vus_max........................: 350     min=350              max=350
+----------------------------------------
+
+All tests completed. See 'results/GCP_LoadTest_SmallPL_2025-02-25T12:49:11.log' for details.

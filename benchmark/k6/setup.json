@@ -1,0 +1,61 @@
+{
+  "LoadTest": {
+    "testName": "OnPrem_LoadTest_MediumPL",
+    "host": "192.168.1.182",
+    "options": {
+      "insecureSkipTLSVerify": true,
+      "stages": [
+        { "duration": "2m", "target": 350 },
+        { "duration": "1m", "target": 350 },
+        { "duration": "2m", "target": 0 }
+      ]
+    },
+    "multiplier": 10,
+    "text": "In an era defined by rapid innovation and global interconnectivity, humanity finds itself at the crossroads of technology and tradition. Modern advancements in computing, medicine, and environmental science have redefined possibilities, enabling breakthroughs once thought impossible. As digital networks weave communities together, ethical debates and sustainable practices emerge as critical priorities. Scholars, engineers, and policymakers collaborate to harness artificial intelligence and renewable energy, ensuring progress benefits society at large. Cultural heritage and scientific discovery now coexist in a delicate balance, challenging us to honor the past while forging new paths. Every discovery, from quantum computing to gene editing, invites both excitement and caution, urging responsible innovation and shared wisdom for a brighter future. With each milestone, the narrative of progress deepens, inspiring a commitment to knowledge, empathy, and perseverance that transcends borders and generations. This comprehensive journey through scientific and cultural evolution illustrates how collective effort and visionary thinking drive society forward. The integration of diverse perspectives fosters innovation, while respect for natural systems ensures that progress remains sustainable and inclusive. As challenges arise and new opportunities emerge, the interplay between technology and human values continues to shape our shared destiny, reminding us that every step forward is a testament to our capacity for adaptation and hope.",
+    "sleep": 0
+  },
+
+  "StressTest": {
+    "testName": "OnPrem_StressTest_RandomPL",
+    "host": "192.168.1.182",
+    "options": {
+      "insecureSkipTLSVerify": true,
+      "stages": [
+        { "duration": "30s", "target": 100 },
+        { "duration": "1m", "target": 100 },
+        { "duration": "30s", "target": 300 },
+        { "duration": "1m", "target": 300 },
+        { "duration": "30s", "target": 500 },
+        { "duration": "3m", "target": 500 },
+        { "duration": "30s", "target": 700 },
+        { "duration": "1m", "target": 700 },
+        { "duration": "20s", "target": 0 }
+      ]
+    },
+    "multiplier": [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30, 40, 50, 70, 95],
+    "text": "In an era defined by rapid innovation and global interconnectivity, humanity finds itself at the crossroads of technology and tradition. Modern advancements in computing, medicine, and environmental science have redefined possibilities, enabling breakthroughs once thought impossible. As digital networks weave communities together, ethical debates and sustainable practices emerge as critical priorities. Scholars, engineers, and policymakers collaborate to harness artificial intelligence and renewable energy, ensuring progress benefits society at large. Cultural heritage and scientific discovery now coexist in a delicate balance, challenging us to honor the past while forging new paths. Every discovery, from quantum computing to gene editing, invites both excitement and caution, urging responsible innovation and shared wisdom for a brighter future. With each milestone, the narrative of progress deepens, inspiring a commitment to knowledge, empathy, and perseverance that transcends borders and generations. This comprehensive journey through scientific and cultural evolution illustrates how collective effort and visionary thinking drive society forward. The integration of diverse perspectives fosters innovation, while respect for natural systems ensures that progress remains sustainable and inclusive. As challenges arise and new opportunities emerge, the interplay between technology and human values continues to shape our shared destiny, reminding us that every step forward is a testament to our capacity for adaptation and hope.",
+    "sleep": 1
+  },
+
+  "SpikeTest": {
+    "testName": "OnPrem_SpikeTest_MediumPL",
+    "host": "192.168.1.182",
+    "options": {
+      "insecureSkipTLSVerify": true,
+      "stages": [
+        { "duration": "10s", "target": 50 },
+        { "duration": "1m", "target": 50 },
+        { "duration": "10s", "target": 1000 },
+        { "duration": "20s", "target": 1000 },
+        { "duration": "10s", "target": 50 },
+        { "duration": "20s", "target": 50 },
+        { "duration": "10s", "target": 1000 },
+        { "duration": "20s", "target": 1000 },
+        { "duration": "10s", "target": 0 }
+      ]
+    },
+    "multiplier": 10,
+    "text": "In an era defined by rapid innovation and global interconnectivity, humanity finds itself at the crossroads of technology and tradition. Modern advancements in computing, medicine, and environmental science have redefined possibilities, enabling breakthroughs once thought impossible. As digital networks weave communities together, ethical debates and sustainable practices emerge as critical priorities. Scholars, engineers, and policymakers collaborate to harness artificial intelligence and renewable energy, ensuring progress benefits society at large. Cultural heritage and scientific discovery now coexist in a delicate balance, challenging us to honor the past while forging new paths. Every discovery, from quantum computing to gene editing, invites both excitement and caution, urging responsible innovation and shared wisdom for a brighter future. With each milestone, the narrative of progress deepens, inspiring a commitment to knowledge, empathy, and perseverance that transcends borders and generations. This comprehensive journey through scientific and cultural evolution illustrates how collective effort and visionary thinking drive society forward. The integration of diverse perspectives fosters innovation, while respect for natural systems ensures that progress remains sustainable and inclusive. As challenges arise and new opportunities emerge, the interplay between technology and human values continues to shape our shared destiny, reminding us that every step forward is a testament to our capacity for adaptation and hope.",
+    "sleep": 1
+  }
+}
